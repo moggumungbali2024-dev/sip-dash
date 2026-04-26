@@ -21,6 +21,7 @@ export default function TaskManagementContent() {
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(false);
 
   const filteredTasks = tasks.filter((t) => {
@@ -64,27 +65,32 @@ export default function TaskManagementContent() {
   };
 
   const handleCreateTask = (data: Partial<Task>) => {
-    // Backend: POST /api/tasks → Supabase insert → real-time broadcast
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      title: data.title || 'Untitled Task',
-      description: data.description || '',
-      status: 'assigned',
-      priority: data.priority || 'medium',
-      project: data.project || 'General',
-      assignee: data.assignee || mockTasks[0].assignee,
-      createdBy: { id: 'member-001', name: 'Andi Susanto', avatar: 'AS', role: 'manager' },
-      dueDate: data.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date().toISOString(),
-      subtaskCount: 0,
-      subtaskDone: 0,
-      waReminder: data.waReminder ?? true,
-      tags: data.tags || [],
-      attachmentCount: 0,
-    };
-    setTasks((prev) => [newTask, ...prev]);
-    toast.success('Task created and assigned — WA notification sent');
-    setCreateOpen(false);
+    if (editingTask) {
+      setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? { ...t, ...data } : t)));
+      toast.success('Task updated successfully');
+      setEditingTask(null);
+    } else {
+      const newTask: Task = {
+        id: `task-${Date.now()}`,
+        title: data.title || 'Untitled Task',
+        description: data.description || '',
+        status: 'assigned',
+        priority: data.priority || 'medium',
+        project: data.project || 'General',
+        assignee: data.assignee || mockTasks[0].assignee,
+        createdBy: { id: 'member-001', name: 'Andi Susanto', avatar: 'AS', role: 'manager' },
+        dueDate: data.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date().toISOString(),
+        subtaskCount: 0,
+        subtaskDone: 0,
+        waReminder: data.waReminder ?? true,
+        tags: data.tags || [],
+        attachmentCount: 0,
+      };
+      setTasks((prev) => [newTask, ...prev]);
+      toast.success('Task created and assigned — WA notification sent');
+      setCreateOpen(false);
+    }
   };
 
   return (
@@ -122,13 +128,15 @@ export default function TaskManagementContent() {
         onWaToggle={handleWaToggle}
         onBulkDelete={handleBulkDelete}
         onBulkStatusChange={handleBulkStatusChange}
+        onEdit={(task) => setEditingTask(task)}
       />
 
       {/* Create Task Modal */}
       <CreateTaskModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
+        open={createOpen || !!editingTask}
+        onClose={() => { setCreateOpen(false); setEditingTask(null); }}
         onCreate={handleCreateTask}
+        initialData={editingTask}
       />
     </div>
   );

@@ -12,6 +12,7 @@ interface CreateTaskModalProps {
   open: boolean;
   onClose: () => void;
   onCreate: (data: Partial<Task>) => void;
+  initialData?: Task | null;
 }
 
 interface FormData {
@@ -24,8 +25,8 @@ interface FormData {
   tags: string;
 }
 
-export default function CreateTaskModal({ open, onClose, onCreate }: CreateTaskModalProps) {
-  const [waReminder, setWaReminder] = useState(true);
+export default function CreateTaskModal({ open, onClose, onCreate, initialData }: CreateTaskModalProps) {
+  const [waReminder, setWaReminder] = useState(initialData?.waReminder ?? true);
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -34,6 +35,24 @@ export default function CreateTaskModal({ open, onClose, onCreate }: CreateTaskM
     reset,
     formState: { errors },
   } = useForm<FormData>();
+
+  React.useEffect(() => {
+    if (initialData && open) {
+      reset({
+        title: initialData.title,
+        description: initialData.description,
+        priority: initialData.priority,
+        project: initialData.project,
+        assigneeId: initialData.assignee?.id,
+        dueDate: initialData.dueDate.split('T')[0],
+        tags: initialData.tags?.join(', '),
+      });
+      setWaReminder(initialData.waReminder ?? true);
+    } else if (!open) {
+      reset({ title: '', description: '', priority: '', project: '', assigneeId: '', dueDate: '', tags: '' });
+      setWaReminder(true);
+    }
+  }, [initialData, open, reset]);
 
   const onSubmit = (data: FormData) => {
     setSubmitting(true);
@@ -57,7 +76,7 @@ export default function CreateTaskModal({ open, onClose, onCreate }: CreateTaskM
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Create New Task" subtitle="Task will be assigned and team member notified via WA" size="lg">
+    <Modal open={open} onClose={onClose} title={initialData ? "Edit Task" : "Create New Task"} subtitle={initialData ? "Make changes to the task" : "Task will be assigned and team member notified via WA"} size="lg">
       <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
         {/* Title */}
         <div>
@@ -200,10 +219,10 @@ export default function CreateTaskModal({ open, onClose, onCreate }: CreateTaskM
             {submitting ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                Creating...
+                {initialData ? 'Saving...' : 'Creating...'}
               </>
             ) : (
-              'Create Task'
+              initialData ? 'Save Changes' : 'Create Task'
             )}
           </button>
         </div>

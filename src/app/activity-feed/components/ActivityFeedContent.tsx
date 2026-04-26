@@ -53,7 +53,7 @@ export default function ActivityFeedContent() {
               onClick={() => setTypeFilter(opt.value)}
               className={`px-3 py-1.5 text-[12px] font-medium rounded-lg border transition-all duration-150 ${
                 typeFilter === opt.value
-                  ? 'bg-primary text-white border-primary' :'bg-white text-muted-foreground border-border hover:bg-muted hover:text-foreground'
+                  ? 'bg-primary text-white border-primary' :'bg-white dark:bg-gray-900 text-muted-foreground dark:text-gray-400 border-border dark:border-gray-700 hover:bg-muted dark:hover:bg-gray-800 hover:text-foreground dark:hover:text-white'
               }`}
             >
               {opt.label}
@@ -99,27 +99,27 @@ function ActivitySidePanel() {
   };
 
   return (
-    <div className="bg-white border border-border rounded-xl shadow-card overflow-hidden">
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <h3 className="text-[13.5px] font-semibold text-foreground">Team Activity Today</h3>
-        <span className="text-[11px] text-muted-foreground">Apr 26</span>
+    <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card overflow-hidden">
+      <div className="px-4 py-3 border-b border-border dark:border-gray-700 flex items-center justify-between">
+        <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">Team Activity Today</h3>
+        <span className="text-[11px] text-muted-foreground dark:text-gray-400">Apr 26</span>
       </div>
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-border dark:divide-gray-700">
         {memberActivity.map((m) => (
-          <div key={`side-member-${m.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors duration-150">
+          <div key={`side-member-${m.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 dark:hover:bg-gray-800/40 transition-colors duration-150">
             <div className="relative">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold ${avatarColors[m.avatar]}`}>
                 {m.avatar}
               </div>
-              <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${m.online ? 'bg-green-500' : 'bg-slate-300'}`} />
+              <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-900 ${m.online ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[12.5px] font-medium text-foreground truncate">{m.name}</p>
-              <p className="text-[11px] text-muted-foreground">{m.lastSeen}</p>
+              <p className="text-[12.5px] font-medium text-foreground dark:text-white truncate">{m.name}</p>
+              <p className="text-[11px] text-muted-foreground dark:text-gray-400">{m.lastSeen}</p>
             </div>
             <div className="text-right">
-              <p className="text-[13px] font-semibold text-foreground tabular-nums">{m.actionsToday}</p>
-              <p className="text-[10px] text-muted-foreground">actions</p>
+              <p className="text-[13px] font-semibold text-foreground dark:text-white tabular-nums">{m.actionsToday}</p>
+              <p className="text-[10px] text-muted-foreground dark:text-gray-500">actions</p>
             </div>
           </div>
         ))}

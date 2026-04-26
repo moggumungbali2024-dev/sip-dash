@@ -10,7 +10,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'TeamFlow — Team Management & Task Automation',
+  title: 'sipOS - dashboard',
   description:
     'Manage tasks, monitor team activity, and automate WhatsApp reminders — all in one dashboard built for modern Indonesian teams.',
   icons: {

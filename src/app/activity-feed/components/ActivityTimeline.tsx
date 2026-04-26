@@ -89,7 +89,8 @@ export default function ActivityTimeline({ activities }: Props) {
           return (
             <div
               key={act.id}
-              className={`flex gap-3.5 px-5 py-3.5 hover:bg-muted/30 dark:hover:bg-gray-800/40 transition-colors duration-150 animate-slide-up ${
+              onClick={() => toast.info(`Viewing activity: ${act.description}`)}
+              className={`cursor-pointer flex gap-3.5 px-5 py-3.5 hover:bg-muted/30 dark:hover:bg-gray-800/40 transition-colors duration-150 animate-slide-up ${
                 act.type === 'task_overdue' ? 'bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20' : ''
               }`}
             >

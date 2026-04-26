@@ -69,7 +69,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         <AppLogo size={32} />
         {!collapsed && (
           <span className="font-semibold text-[15px] text-foreground dark:text-white tracking-tight flex-1">
-            TeamFlow
+            sipOS - dashboard
           </span>
         )}
         {/* Mobile close button */}

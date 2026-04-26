@@ -79,7 +79,24 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+      // reset height
+      if (inputRef.current) inputRef.current.style.height = 'auto';
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    
+    // Auto-resize
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
+    }
+
+    // Mock mentions
+    const lastChar = e.target.value.slice(-1);
+    if (lastChar === '@') toast.info('Mention member (@) functionality coming soon');
+    if (lastChar === '#') toast.info('Tag channel (#) functionality coming soon');
   };
 
   if (!channel) return null;
@@ -198,7 +215,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
                   )}
 
                   <div
-                    className={`relative px-3 md:px-3.5 py-2 md:py-2.5 rounded-2xl text-[13px] md:text-[13.5px] leading-relaxed break-words ${
+                    className={`relative px-3 md:px-3.5 py-2 md:py-2.5 rounded-2xl text-[13px] md:text-[13.5px] leading-relaxed break-words whitespace-pre-wrap ${
                       msg.isMe
                         ? 'bg-primary text-white rounded-tr-sm'
                         : 'bg-muted dark:bg-gray-800 text-foreground dark:text-white rounded-tl-sm'
@@ -338,7 +355,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
           <textarea
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={`Message ${isDm ? channel.name : `#${channel.name}`}...`}
             rows={1}

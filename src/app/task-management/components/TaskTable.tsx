@@ -16,6 +16,7 @@ interface TaskTableProps {
   onWaToggle: (id: string, val: boolean) => void;
   onBulkDelete: () => void;
   onBulkStatusChange: (status: TaskStatus) => void;
+  onEdit: (task: Task) => void;
 }
 
 type SortKey = 'title' | 'priority' | 'status' | 'dueDate' | 'assignee' | 'project';
@@ -60,6 +61,7 @@ export default function TaskTable({
   onWaToggle,
   onBulkDelete,
   onBulkStatusChange,
+  onEdit,
 }: TaskTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('dueDate');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -328,7 +330,7 @@ export default function TaskTable({
                       </div>
                       <div className="relative group/btn">
                         <button
-                          onClick={() => toast.info(`Edit task: ${task.title}`)}
+                          onClick={() => onEdit(task)}
                           className="w-7 h-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors duration-150"
                           aria-label="Edit task"
                         >
