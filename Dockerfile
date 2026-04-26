@@ -9,7 +9,7 @@ RUN apk add --no-cache libc6-compat
 
 # Copy package manifests and install deps (leverage layer cache)
 COPY package.json package-lock.json* ./
-RUN npm ci --prefer-offline
+RUN npm install
 
 # =========================================================
 # Stage 2: Build the application
