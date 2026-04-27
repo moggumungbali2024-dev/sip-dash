@@ -4,6 +4,12 @@ import { supabase } from './supabaseClient';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import type { DbTask, DbProfile, DbProject, DbChatChannel, DbChatMessage } from './supabaseClient';
 
+// Guard against non-UUID IDs (mock data uses string IDs like 'task-011')
+function isUUID(s: string | null | undefined): boolean {
+  if (!s) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
+
 // ─── Client-side notification helper ──────────────────────────────────────────
 
 export async function triggerNotify(opts: {
@@ -119,6 +125,7 @@ export function useTasks() {
   };
 
   const updateTask = async (id: string, updates: Partial<DbTask>): Promise<boolean> => {
+    if (!isUUID(id)) return true; // Mock data — skip DB call
     const { error: err } = await supabase
       .from('tasks')
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -128,6 +135,7 @@ export function useTasks() {
   };
 
   const deleteTask = async (id: string): Promise<boolean> => {
+    if (!isUUID(id)) return true; // Mock data — skip DB call
     const { error: err } = await supabase.from('tasks').delete().eq('id', id);
     if (err) { console.error('[useTasks.delete]', err); return false; }
     return true;
@@ -176,6 +184,12 @@ export function useChatMessages(channelId: string | null) {
   channelRef.current = channelId;
 
   const fetchMessages = useCallback(async (cid: string) => {
+    // Only query Supabase if channelId is a real UUID
+    if (!isUUID(cid)) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const { data } = await supabase
       .from('chat_messages')
@@ -191,6 +205,9 @@ export function useChatMessages(channelId: string | null) {
     if (!channelId) return;
     fetchMessages(channelId);
 
+    // Only subscribe to real-time if it's a valid UUID
+    if (!isUUID(channelId)) return;
+
     const channel = supabase
       .channel(`messages-${channelId}`)
       .on('postgres_changes', {
@@ -199,7 +216,6 @@ export function useChatMessages(channelId: string | null) {
         table: 'chat_messages',
         filter: `channel_id=eq.${channelId}`,
       }, async (payload) => {
-        // Fetch with sender join
         const { data } = await supabase
           .from('chat_messages')
           .select('*, sender:profiles(*)')
@@ -213,10 +229,10 @@ export function useChatMessages(channelId: string | null) {
   }, [channelId, fetchMessages]);
 
   const sendMessage = async (content: string, senderId: string): Promise<boolean> => {
-    if (!channelId) return false;
+    if (!channelId || !isUUID(channelId)) return false;
     const { error } = await supabase.from('chat_messages').insert([{
       channel_id: channelId,
-      sender_id: senderId,
+      sender_id: isUUID(senderId) ? senderId : null,
       content,
       status: 'sent',
     }]);
@@ -234,7 +250,8 @@ export function useDbNotifications(userId: string | null) {
   const [loading, setLoading] = useState(false);
 
   const fetch_ = useCallback(async () => {
-    if (!userId) return;
+    // Skip query if userId is not a valid UUID (mock mode)
+    if (!userId || !isUUID(userId)) return;
     setLoading(true);
     const { data } = await supabase
       .from('notifications')
@@ -248,9 +265,9 @@ export function useDbNotifications(userId: string | null) {
 
   useEffect(() => { fetch_(); }, [fetch_]);
 
-  // Real-time
+  // Real-time — only subscribe if valid UUID
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !isUUID(userId)) return;
     const ch = supabase
       .channel('notifications-realtime')
       .on('postgres_changes', {

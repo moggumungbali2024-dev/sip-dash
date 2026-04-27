@@ -11,8 +11,10 @@ interface ToggleProps {
 }
 
 export default function Toggle({ checked, onChange, label, disabled, size = 'md' }: ToggleProps) {
-  const trackSize = size === 'sm' ? 'w-8 h-4' : 'w-10 h-5';
-  const thumbSize = size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5';
+  const trackW = size === 'sm' ? 'w-8' : 'w-11';
+  const trackH = size === 'sm' ? 'h-4' : 'h-6';
+  const thumbW = size === 'sm' ? 'w-3' : 'w-4';
+  const thumbH = size === 'sm' ? 'h-3' : 'h-4';
   const thumbTranslate = size === 'sm' ? 'translate-x-4' : 'translate-x-5';
 
   return (
@@ -23,12 +25,12 @@ export default function Toggle({ checked, onChange, label, disabled, size = 'md'
         aria-checked={checked}
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
-        className={`relative ${trackSize} rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-          checked ? 'bg-primary' : 'bg-border'
+        className={`relative inline-flex shrink-0 ${trackW} ${trackH} rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+          checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
         }`}
       >
         <span
-          className={`absolute top-0.5 left-0.5 ${thumbSize} bg-white rounded-full shadow transition-transform duration-200 ${
+          className={`absolute top-1 left-1 ${thumbW} ${thumbH} bg-white rounded-full shadow-sm transition-transform duration-200 ${
             checked ? thumbTranslate : 'translate-x-0'
           }`}
         />
