@@ -28,9 +28,10 @@ interface Props {
   onReaction: (messageId: string, emoji: string) => void;
   onToggleInfo: () => void;
   onToggleSidebar: () => void;
-  infoPanelOpen: boolean;
-  channels?: ChatChannel[];
   loading?: boolean;
+  onSwitchChannel?: (channelId: string) => void;
+  onMentionClick?: (name: string) => void;
+  members?: { id: string; name: string; avatar: string; role: string; status?: string }[];
 }
 
 const avatarColors: Record<string, string> = {
@@ -60,21 +61,21 @@ function formatDateSeparator(ts: string) {
 
 const EMOJI_QUICK = ['👍', '❤️', '😂', '🎉', '🔥', '✅', '👀', '💯', '🙌', '🚀'];
 
-function renderMessageContent(content: string) {
+function renderMessageContent(content: string, onMentionClick?: (name: string) => void, onChannelClick?: (name: string) => void) {
   if (!content) return null;
   // Regex matches @username or #channel
   const parts = content.split(/(@[a-zA-Z0-9_-]+|#[a-zA-Z0-9_-]+)/g);
   return parts.map((part, i) => {
     if (part.startsWith('@')) {
       return (
-        <span key={i} className="text-blue-500 dark:text-blue-400 font-medium cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); toast.info(`Viewing profile: ${part.substring(1)}`); }}>
+        <span key={i} className="text-blue-500 dark:text-blue-400 font-medium cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); if (onMentionClick) onMentionClick(part.substring(1)); else toast.info(`Viewing profile: ${part.substring(1)}`); }}>
           {part}
         </span>
       );
     }
     if (part.startsWith('#')) {
       return (
-        <span key={i} className="text-primary font-medium cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); toast.info(`Navigating to channel: ${part.substring(1)}`); }}>
+        <span key={i} className="text-primary font-medium cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); if (onChannelClick) onChannelClick(part.substring(1)); else toast.info(`Navigating to channel: ${part.substring(1)}`); }}>
           {part}
         </span>
       );
@@ -83,7 +84,7 @@ function renderMessageContent(content: string) {
   });
 }
 
-export default function ChatMessageArea({ channel, messages, onSend, onReaction, onToggleInfo, onToggleSidebar, infoPanelOpen, channels = [], loading = false }: Props) {
+export default function ChatMessageArea({ channel, messages, onSend, onReaction, onToggleInfo, onToggleSidebar, infoPanelOpen, channels = [], members = [], loading = false, onSwitchChannel, onMentionClick }: Props) {
   const [input, setInput] = useState('');
   const [isTyping] = useState(false);
   const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
@@ -153,7 +154,20 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
     setShowMainEmojiPicker(false);
   };
 
-  if (!channel) return null;
+  if (!channel) {
+    return (
+      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-950 overflow-hidden items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 bg-muted dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 text-muted-foreground">
+          <MessageSquare size={32} />
+        </div>
+        <h3 className="text-[16px] font-semibold text-foreground dark:text-white mb-2">Belum ada chat</h3>
+        <p className="text-[13px] text-muted-foreground max-w-sm mb-6">Pilih channel atau mulai percakapan baru untuk mengirim pesan ke tim Anda.</p>
+        <button onClick={onToggleSidebar} className="md:hidden flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
+          <Menu size={16} /> Buka Menu Chat
+        </button>
+      </div>
+    );
+  }
 
   const isDm = channel.type === 'dm';
   const dmMember = channel.members?.[0];
@@ -275,7 +289,14 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
                         : 'bg-muted dark:bg-gray-800 text-foreground dark:text-white rounded-tl-sm'
                     }`}
                   >
-                    {renderMessageContent(msg.content)}
+                    {renderMessageContent(msg.content, onMentionClick, (cName) => {
+                      const ch = channels.find((c) => c.name.toLowerCase() === cName.toLowerCase());
+                      if (ch && onSwitchChannel) {
+                        onSwitchChannel(ch.id);
+                      } else {
+                        toast.error(`Channel #${cName} not found`);
+                      }
+                    })}
 
                     {/* Attachments */}
                     {msg.attachments && msg.attachments.length > 0 && (
@@ -410,7 +431,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
             <div className="px-3 py-2 text-[11px] font-medium text-muted-foreground bg-muted/50 dark:bg-gray-800/50 border-b border-border dark:border-gray-700">
               Mentions
             </div>
-            {mockMembers.filter(m => m.name.toLowerCase().includes(mentionQuery) || m.role.toLowerCase().includes(mentionQuery)).map(m => (
+            {members.filter(m => m.name.toLowerCase().includes(mentionQuery) || m.role.toLowerCase().includes(mentionQuery)).map(m => (
               <button
                 key={m.id}
                 onClick={() => insertMention(m.name, '@')}
@@ -425,7 +446,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
                 </div>
               </button>
             ))}
-            {mockMembers.filter(m => m.name.toLowerCase().includes(mentionQuery) || m.role.toLowerCase().includes(mentionQuery)).length === 0 && (
+            {members.filter(m => m.name.toLowerCase().includes(mentionQuery) || m.role.toLowerCase().includes(mentionQuery)).length === 0 && (
               <div className="px-3 py-4 text-center text-[12px] text-muted-foreground">No members found</div>
             )}
           </div>

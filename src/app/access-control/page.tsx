@@ -39,7 +39,7 @@ const modules = [
   { key: 'settings', label: 'Settings' },
 ];
 
-const roles: Role[] = [
+const initialRoles: Role[] = [
   {
     id: 'r1', name: 'CEO', nameId: 'CEO', color: 'bg-red-100 text-red-700 border-red-200',
     memberCount: 1, description: 'Full access to all modules',
@@ -67,7 +67,9 @@ const roles: Role[] = [
   },
 ];
 
-const members: Member[] = [
+];
+
+const initialMembers: Member[] = [
   { id: 'm1', name: 'Andi Susanto', avatar: 'AS', avatarColor: 'bg-blue-100 text-blue-700', email: 'andi@teamflow.id', role: 'Manager', status: 'active' },
   { id: 'm2', name: 'Budi Hartono', avatar: 'BH', avatarColor: 'bg-violet-100 text-violet-700', email: 'budi@teamflow.id', role: 'Supervisor', status: 'active' },
   { id: 'm3', name: 'Citra Dewi', avatar: 'CD', avatarColor: 'bg-pink-100 text-pink-700', email: 'citra@teamflow.id', role: 'Employee', status: 'active' },
@@ -87,6 +89,9 @@ type TabKey = 'roles' | 'members';
 export default function AccessControlPage() {
   const { t } = useApp();
   const [activeTab, setActiveTab] = useState<TabKey>('roles');
+  const [roles, setRoles] = useState<Role[]>(initialRoles);
+  const [members, setMembers] = useState<Member[]>(initialMembers);
+  
   const [selectedRole, setSelectedRole] = useState<Role>(roles[0]);
   const [memberRoles, setMemberRoles] = useState<Record<string, string>>(
     Object.fromEntries(members.map((m) => [m.id, m.role]))
@@ -96,6 +101,69 @@ export default function AccessControlPage() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Form states for Role Modal
+  const [roleFormName, setRoleFormName] = useState('');
+  const [roleFormDesc, setRoleFormDesc] = useState('');
+  const [roleFormPerms, setRoleFormPerms] = useState<Record<string, 'full' | 'read' | 'none'>>({});
+
+  // Form states for Assign Modal
+  const [assignFormMemberId, setAssignFormMemberId] = useState('');
+  const [assignFormRoleId, setAssignFormRoleId] = useState('');
+
+  const handleOpenRoleModal = (edit: boolean) => {
+    setIsEditMode(edit);
+    if (edit) {
+      setRoleFormName(selectedRole.name);
+      setRoleFormDesc(selectedRole.description);
+      setRoleFormPerms({ ...selectedRole.permissions });
+    } else {
+      setRoleFormName('');
+      setRoleFormDesc('');
+      setRoleFormPerms(Object.fromEntries(modules.map(m => [m.key, 'read'])));
+    }
+    setShowRoleModal(true);
+  };
+
+  const handleSaveRole = () => {
+    if (!roleFormName.trim()) {
+      toast.error('Nama role tidak boleh kosong');
+      return;
+    }
+    
+    if (isEditMode) {
+      setRoles(prev => prev.map(r => r.id === selectedRole.id ? { ...r, name: roleFormName, description: roleFormDesc, permissions: roleFormPerms } : r));
+      setSelectedRole(prev => ({ ...prev, name: roleFormName, description: roleFormDesc, permissions: roleFormPerms }));
+      toast.success('Role berhasil diupdate');
+    } else {
+      const newRole: Role = {
+        id: `r${Date.now()}`,
+        name: roleFormName,
+        nameId: roleFormName,
+        color: 'bg-slate-100 text-slate-700 border-slate-200',
+        memberCount: 0,
+        description: roleFormDesc,
+        permissions: roleFormPerms,
+      };
+      setRoles(prev => [...prev, newRole]);
+      setSelectedRole(newRole);
+      toast.success('Role berhasil dibuat');
+    }
+    setShowRoleModal(false);
+  };
+
+  const handleAssignRole = () => {
+    if (!assignFormMemberId || !assignFormRoleId) {
+      toast.error('Pilih anggota dan role');
+      return;
+    }
+    const roleObj = roles.find(r => r.id === assignFormRoleId);
+    if (!roleObj) return;
+    
+    setMemberRoles(prev => ({ ...prev, [assignFormMemberId]: roleObj.name }));
+    toast.success('Role berhasil diubah');
+    setShowAssignModal(false);
+  };
 
   return (
     <AppLayout title={t.accessControl.title} subtitle={t.accessControl.subtitle}>
@@ -127,7 +195,7 @@ export default function AccessControlPage() {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">{t.accessControl.roles}</h3>
                 <button 
-                  onClick={() => { setIsEditMode(false); setShowRoleModal(true); }}
+                  onClick={() => handleOpenRoleModal(false)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-medium hover:bg-primary/90 transition-colors duration-150"
                 >
                   <Plus size={13} />
@@ -167,7 +235,7 @@ export default function AccessControlPage() {
                     <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${selectedRole.color}`}>
                       {selectedRole.memberCount} {t.accessControl.members}
                     </span>
-                    <button onClick={() => { setIsEditMode(true); setShowRoleModal(true); }} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted dark:hover:bg-gray-800 text-muted-foreground transition-colors">
+                    <button onClick={() => handleOpenRoleModal(true)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted dark:hover:bg-gray-800 text-muted-foreground transition-colors">
                       <Edit2 size={14} />
                     </button>
                   </div>
@@ -195,7 +263,11 @@ export default function AccessControlPage() {
             <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">{t.accessControl.members}</h3>
               <button 
-                onClick={() => setShowAssignModal(true)}
+                onClick={() => {
+                  setAssignFormMemberId(members[0]?.id || '');
+                  setAssignFormRoleId(roles[0]?.id || '');
+                  setShowAssignModal(true);
+                }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-medium hover:bg-primary/90 transition-colors duration-150"
               >
                 <Plus size={13} />
@@ -259,11 +331,11 @@ export default function AccessControlPage() {
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin">
               <div>
                 <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Nama Role</label>
-                <input type="text" defaultValue={isEditMode ? selectedRole.name : ''} placeholder="contoh: Marketing" className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" />
+                <input type="text" value={roleFormName} onChange={e => setRoleFormName(e.target.value)} placeholder="contoh: Marketing" className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" />
               </div>
               <div>
                 <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Deskripsi</label>
-                <input type="text" defaultValue={isEditMode ? selectedRole.description : ''} placeholder="Deskripsi singkat role" className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" />
+                <input type="text" value={roleFormDesc} onChange={e => setRoleFormDesc(e.target.value)} placeholder="Deskripsi singkat role" className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" />
               </div>
               <div className="pt-2">
                 <label className="block text-[12px] font-medium text-muted-foreground mb-3">Hak Akses Modul</label>
@@ -271,7 +343,7 @@ export default function AccessControlPage() {
                   {modules.map(mod => (
                     <div key={mod.key} className="flex items-center justify-between">
                       <span className="text-[13px] text-foreground dark:text-white">{mod.label}</span>
-                      <select defaultValue={isEditMode ? selectedRole.permissions[mod.key] : 'read'} className="text-[12px] px-2 py-1 border border-border dark:border-gray-700 rounded bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none">
+                      <select value={roleFormPerms[mod.key] || 'read'} onChange={e => setRoleFormPerms(prev => ({ ...prev, [mod.key]: e.target.value as any }))} className="text-[12px] px-2 py-1 border border-border dark:border-gray-700 rounded bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none">
                         <option value="full">Full Access</option>
                         <option value="read">Read Only</option>
                         <option value="none">No Access</option>
@@ -280,7 +352,7 @@ export default function AccessControlPage() {
                   ))}
                 </div>
               </div>
-              <button onClick={() => { toast.success(isEditMode ? 'Role diupdate' : 'Role dibuat'); setShowRoleModal(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors mt-2">
+              <button onClick={handleSaveRole} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors mt-2">
                 Simpan Role
               </button>
             </div>
@@ -300,17 +372,17 @@ export default function AccessControlPage() {
             <div className="p-5 space-y-4">
               <div>
                 <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Pilih Anggota</label>
-                <select className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                <select value={assignFormMemberId} onChange={e => setAssignFormMemberId(e.target.value)} className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
                   {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Pilih Role</label>
-                <select className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                <select value={assignFormRoleId} onChange={e => setAssignFormRoleId(e.target.value)} className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
                   {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </div>
-              <button onClick={() => { toast.success('Role berhasil diubah'); setShowAssignModal(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
+              <button onClick={handleAssignRole} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
                 Terapkan Perubahan
               </button>
             </div>

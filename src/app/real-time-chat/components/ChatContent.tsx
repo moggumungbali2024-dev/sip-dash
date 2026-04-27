@@ -179,6 +179,23 @@ export default function ChatContent() {
         infoPanelOpen={infoPanelOpen}
         channels={channels}
         loading={msgsLoading}
+        onSwitchChannel={handleSelectChannel}
+        onMentionClick={(name) => {
+          const membersList = profiles.length > 0 ? profiles : mockMembers;
+          const member = membersList.find((m: any) => m.name.toLowerCase().includes(name.toLowerCase()));
+          if (member) {
+            // Find or create DM channel
+            const dm = channels.find((c) => c.type === 'dm' && c.members?.some((cm: any) => cm.id === member.id));
+            if (dm) {
+              handleSelectChannel(dm.id);
+            } else {
+              // Usually we'd create a DM channel here, but for now just toast
+              toast.info(`Opening DM with ${member.name}`);
+            }
+          } else {
+            toast.error(`User @${name} not found`);
+          }
+        }}
       />
 
       {/* Info panel */}
