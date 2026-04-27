@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ==========================================
 -- 1. PROFILES (Extends auth.users)
 -- ==========================================
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     name TEXT NOT NULL,
     avatar TEXT NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE public.profiles (
 -- ==========================================
 -- 2. PROJECTS
 -- ==========================================
-CREATE TABLE public.projects (
+CREATE TABLE IF NOT EXISTS public.projects (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -36,7 +36,7 @@ CREATE TABLE public.projects (
 -- ==========================================
 -- 3. TASKS
 -- ==========================================
-CREATE TABLE public.tasks (
+CREATE TABLE IF NOT EXISTS public.tasks (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE public.tasks (
 -- ==========================================
 -- 4. SUBTASKS
 -- ==========================================
-CREATE TABLE public.subtasks (
+CREATE TABLE IF NOT EXISTS public.subtasks (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     task_id UUID REFERENCES public.tasks(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE public.subtasks (
 -- ==========================================
 -- 5. ACTIVITY LOGS
 -- ==========================================
-CREATE TABLE public.activity_logs (
+CREATE TABLE IF NOT EXISTS public.activity_logs (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     type TEXT NOT NULL, -- task_created, task_updated, task_completed, task_assigned, task_overdue, comment_added, file_uploaded, status_changed, wa_sent, chat_message
     actor_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -84,7 +84,7 @@ CREATE TABLE public.activity_logs (
 -- ==========================================
 -- 6. CHAT CHANNELS
 -- ==========================================
-CREATE TABLE public.chat_channels (
+CREATE TABLE IF NOT EXISTS public.chat_channels (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT,
     type TEXT NOT NULL DEFAULT 'channel', -- channel, dm
@@ -98,7 +98,7 @@ CREATE TABLE public.chat_channels (
 -- ==========================================
 -- 7. CHAT MEMBERS
 -- ==========================================
-CREATE TABLE public.chat_members (
+CREATE TABLE IF NOT EXISTS public.chat_members (
     channel_id UUID REFERENCES public.chat_channels(id) ON DELETE CASCADE,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     last_read_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
@@ -109,7 +109,7 @@ CREATE TABLE public.chat_members (
 -- ==========================================
 -- 8. CHAT MESSAGES
 -- ==========================================
-CREATE TABLE public.chat_messages (
+CREATE TABLE IF NOT EXISTS public.chat_messages (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     channel_id UUID REFERENCES public.chat_channels(id) ON DELETE CASCADE,
     sender_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -124,7 +124,7 @@ CREATE TABLE public.chat_messages (
 -- ==========================================
 -- 9. CALENDAR EVENTS
 -- ==========================================
-CREATE TABLE public.calendar_events (
+CREATE TABLE IF NOT EXISTS public.calendar_events (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
@@ -136,7 +136,7 @@ CREATE TABLE public.calendar_events (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-CREATE TABLE public.calendar_event_members (
+CREATE TABLE IF NOT EXISTS public.calendar_event_members (
     event_id UUID REFERENCES public.calendar_events(id) ON DELETE CASCADE,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     PRIMARY KEY (event_id, user_id)
@@ -145,7 +145,7 @@ CREATE TABLE public.calendar_event_members (
 -- ==========================================
 -- 10. DOCUMENTS
 -- ==========================================
-CREATE TABLE public.documents (
+CREATE TABLE IF NOT EXISTS public.documents (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
     type TEXT NOT NULL, -- folder, pdf, doc, image, video, other
@@ -158,7 +158,7 @@ CREATE TABLE public.documents (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-CREATE TABLE public.document_shares (
+CREATE TABLE IF NOT EXISTS public.document_shares (
     document_id UUID REFERENCES public.documents(id) ON DELETE CASCADE,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     PRIMARY KEY (document_id, user_id)
@@ -167,7 +167,7 @@ CREATE TABLE public.document_shares (
 -- ==========================================
 -- 11. NOTIFICATIONS
 -- ==========================================
-CREATE TABLE public.notifications (
+CREATE TABLE IF NOT EXISTS public.notifications (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -181,7 +181,7 @@ CREATE TABLE public.notifications (
 -- ==========================================
 -- 12. SETTINGS
 -- ==========================================
-CREATE TABLE public.settings (
+CREATE TABLE IF NOT EXISTS public.settings (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     workspace_id TEXT DEFAULT 'default',
     critical_task_deadline_hours INTEGER DEFAULT 24,

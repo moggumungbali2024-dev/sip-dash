@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { useApp } from '@/lib/AppContext';
 import { Shield, Plus, Check, ChevronDown, Users, Lock, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Role {
   id: string;
@@ -121,7 +122,10 @@ export default function AccessControlPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">{t.accessControl.roles}</h3>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-medium hover:bg-primary/90 transition-colors duration-150">
+                <button 
+                  onClick={() => toast.info('Fitur penambahan role khusus akan segera tersedia.')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-medium hover:bg-primary/90 transition-colors duration-150"
+                >
                   <Plus size={13} />
                   {t.accessControl.addRole}
                 </button>
@@ -181,7 +185,10 @@ export default function AccessControlPage() {
           <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card overflow-hidden">
             <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">{t.accessControl.members}</h3>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-medium hover:bg-primary/90 transition-colors duration-150">
+              <button 
+                onClick={() => toast.info('Fitur assign role anggota baru akan segera tersedia.')}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-medium hover:bg-primary/90 transition-colors duration-150"
+              >
                 <Plus size={13} />
                 {t.accessControl.assignRole}
               </button>

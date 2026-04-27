@@ -30,13 +30,22 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
   const [waReminder, setWaReminder] = useState(initialData?.waReminder ?? true);
   const [submitting, setSubmitting] = useState(false);
   // Ambil setting dari localStorage (client only)
-  const [defaultCriticalDue, setDefaultCriticalDue] = useState(24);
+  const [defaultDueDates, setDefaultDueDates] = useState({ critical: 24, high: 48, medium: 72, low: 168 });
   const [enableAutoDue, setEnableAutoDue] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedDue = Number(localStorage.getItem('defaultCriticalDue'));
-      setDefaultCriticalDue(isNaN(storedDue) ? 24 : storedDue);
+      const storedCritical = Number(localStorage.getItem('defaultCriticalDue'));
+      const storedHigh = Number(localStorage.getItem('defaultHighDue'));
+      const storedMedium = Number(localStorage.getItem('defaultMediumDue'));
+      const storedLow = Number(localStorage.getItem('defaultLowDue'));
+      
+      setDefaultDueDates({
+        critical: isNaN(storedCritical) || storedCritical === 0 ? 24 : storedCritical,
+        high: isNaN(storedHigh) || storedHigh === 0 ? 48 : storedHigh,
+        medium: isNaN(storedMedium) || storedMedium === 0 ? 72 : storedMedium,
+        low: isNaN(storedLow) || storedLow === 0 ? 168 : storedLow,
+      });
       setEnableAutoDue(localStorage.getItem('enableAutoDue') !== 'false');
     }
   }, []);
@@ -71,7 +80,17 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
   // Sync setting dari localStorage jika berubah
   useEffect(() => {
     const handleStorage = () => {
-      setDefaultCriticalDue(Number(localStorage.getItem('defaultCriticalDue') || 24));
+      const storedCritical = Number(localStorage.getItem('defaultCriticalDue'));
+      const storedHigh = Number(localStorage.getItem('defaultHighDue'));
+      const storedMedium = Number(localStorage.getItem('defaultMediumDue'));
+      const storedLow = Number(localStorage.getItem('defaultLowDue'));
+      
+      setDefaultDueDates({
+        critical: isNaN(storedCritical) || storedCritical === 0 ? 24 : storedCritical,
+        high: isNaN(storedHigh) || storedHigh === 0 ? 48 : storedHigh,
+        medium: isNaN(storedMedium) || storedMedium === 0 ? 72 : storedMedium,
+        low: isNaN(storedLow) || storedLow === 0 ? 168 : storedLow,
+      });
       setEnableAutoDue(localStorage.getItem('enableAutoDue') !== 'false');
     };
     window.addEventListener('storage', handleStorage);
@@ -81,14 +100,17 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
   const selectedPriority = useWatch({ control, name: 'priority' });
   const selectedDueDate = useWatch({ control, name: 'dueDate' });
 
-  // Auto-set Due Date when Priority changes to Critical
+  // Auto-set Due Date when Priority changes
   useEffect(() => {
-    if (enableAutoDue && selectedPriority === 'critical' && !selectedDueDate) {
-      const now = new Date();
-      now.setHours(now.getHours() + defaultCriticalDue);
-      setValue('dueDate', now.toISOString().split('T')[0], { shouldValidate: true });
+    if (enableAutoDue && selectedPriority && !selectedDueDate) {
+      const p = selectedPriority as keyof typeof defaultDueDates;
+      if (defaultDueDates[p]) {
+        const now = new Date();
+        now.setHours(now.getHours() + defaultDueDates[p]);
+        setValue('dueDate', now.toISOString().split('T')[0], { shouldValidate: true });
+      }
     }
-  }, [selectedPriority, enableAutoDue, defaultCriticalDue, selectedDueDate, setValue]);
+  }, [selectedPriority, enableAutoDue, defaultDueDates, selectedDueDate, setValue]);
 
   const onSubmit = (data: FormData) => {
     setSubmitting(true);

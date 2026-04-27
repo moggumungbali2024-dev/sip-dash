@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { Search, UserPlus, MoreHorizontal, Mail, Phone, Shield, CheckSquare } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface TeamMember {
   id: string;
@@ -103,7 +104,10 @@ export default function TeamPage() {
               </button>
             ))}
           </div>
-          <button className="md:ml-auto w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors duration-150">
+          <button 
+            onClick={() => toast.info('Fitur undang anggota akan segera diintegrasikan dengan Supabase.')}
+            className="md:ml-auto w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors duration-150"
+          >
             <UserPlus size={15} />
             Undang Anggota
           </button>

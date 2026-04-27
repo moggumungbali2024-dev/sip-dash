@@ -85,37 +85,104 @@ function NotificationsTab() {
 }
 
 function IntegrationsTab() {
-  // ...existing code for integrations
-  // Integrasi real-time status bisa diimplementasikan di sini
-  // ...existing code...
+  const integrations = [
+    { id: 'supabase', name: 'Supabase', desc: 'Database & Real-time Sync', status: 'connected', icon: '⚡' },
+    { id: 'gowa', name: 'GoWa API', desc: 'WhatsApp Notifications', status: 'connected', icon: '💬' },
+    { id: 'gotify', name: 'Gotify', desc: 'Push Notifications', status: 'connected', icon: '🔔' },
+    { id: 'slack', name: 'Slack', desc: 'Channel Alerts', status: 'disconnected', icon: '📱' },
+    { id: 'gcal', name: 'Google Calendar', desc: 'Sync Events', status: 'disconnected', icon: '📅' },
+  ];
+
   return (
     <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-border dark:border-gray-700">
-        <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">Integrasi Layanan</h3>
-        <p className="text-[12px] text-muted-foreground mt-0.5">Hubungkan TeamFlow dengan layanan eksternal</p>
+      <div className="px-5 py-3.5 border-b border-border dark:border-gray-700 flex justify-between items-center">
+        <div>
+          <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">Integrasi Layanan</h3>
+          <p className="text-[12px] text-muted-foreground mt-0.5">Hubungkan dashboard dengan layanan eksternal</p>
+        </div>
       </div>
-      {/* ...existing code for integration list... */}
+      <div className="divide-y divide-border dark:divide-gray-700">
+        {integrations.map(int => (
+          <div key={int.id} className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-muted dark:bg-gray-800 flex items-center justify-center text-xl shadow-sm border border-border dark:border-gray-700">
+                {int.icon}
+              </div>
+              <div>
+                <p className="text-[13.5px] font-semibold text-foreground dark:text-white flex items-center gap-2">
+                  {int.name}
+                  {int.status === 'connected' && (
+                    <span className="flex h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                  )}
+                </p>
+                <p className="text-[11.5px] text-muted-foreground">{int.desc}</p>
+              </div>
+            </div>
+            <button className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
+              int.status === 'connected' 
+                ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800/30' 
+                : 'bg-primary text-white hover:bg-primary/90 shadow-sm'
+            }`}>
+              {int.status === 'connected' ? 'Putuskan' : 'Hubungkan'}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-function TaskSettingsTab({ defaultCriticalDue, setDefaultCriticalDue, enableAutoDue, setEnableAutoDue }) {
+function TaskSettingsTab({ 
+  defaultCriticalDue, setDefaultCriticalDue, 
+  defaultHighDue, setDefaultHighDue,
+  defaultMediumDue, setDefaultMediumDue,
+  defaultLowDue, setDefaultLowDue,
+  enableAutoDue, setEnableAutoDue 
+}: any) {
   return (
     <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card p-5 md:p-6">
       <h3 className="text-[14px] font-semibold text-foreground dark:text-white mb-4">Task Settings</h3>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <div>
-          <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">Auto set due date for Critical priority</label>
+          <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">Auto set due date based on Priority</label>
           <div className="flex items-center gap-2">
-            <input type="checkbox" checked={enableAutoDue} onChange={e => setEnableAutoDue(e.target.checked)} />
-            <span className="text-[13px]">Aktifkan otomatis due date 1x24 jam jika priority <b>Critical</b></span>
+            <input type="checkbox" checked={enableAutoDue} onChange={e => setEnableAutoDue(e.target.checked)} className="rounded text-primary focus:ring-primary/30" />
+            <span className="text-[13px]">Aktifkan otomatis set due date berdasarkan prioritas saat task dibuat</span>
           </div>
         </div>
-        <div>
-          <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">Default due date (jam) untuk Critical</label>
-          <input type="number" min={1} max={72} value={defaultCriticalDue} onChange={e => setDefaultCriticalDue(Number(e.target.value))} className="w-24 px-2 py-1 border border-border rounded" />
-          <span className="ml-2 text-[12px] text-muted-foreground">jam setelah dibuat</span>
-        </div>
+        
+        {enableAutoDue && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border dark:border-gray-700">
+            <div>
+              <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">🔴 Critical (jam)</label>
+              <div className="flex items-center gap-2">
+                <input type="number" min={1} max={720} value={defaultCriticalDue} onChange={e => setDefaultCriticalDue(Number(e.target.value))} className="w-24 px-2 py-1.5 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 dark:text-white" />
+                <span className="text-[12px] text-muted-foreground">jam</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">🟠 High (jam)</label>
+              <div className="flex items-center gap-2">
+                <input type="number" min={1} max={720} value={defaultHighDue} onChange={e => setDefaultHighDue(Number(e.target.value))} className="w-24 px-2 py-1.5 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 dark:text-white" />
+                <span className="text-[12px] text-muted-foreground">jam</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">🟡 Medium (jam)</label>
+              <div className="flex items-center gap-2">
+                <input type="number" min={1} max={720} value={defaultMediumDue} onChange={e => setDefaultMediumDue(Number(e.target.value))} className="w-24 px-2 py-1.5 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 dark:text-white" />
+                <span className="text-[12px] text-muted-foreground">jam</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">⚪ Low (jam)</label>
+              <div className="flex items-center gap-2">
+                <input type="number" min={1} max={720} value={defaultLowDue} onChange={e => setDefaultLowDue(Number(e.target.value))} className="w-24 px-2 py-1.5 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 dark:text-white" />
+                <span className="text-[12px] text-muted-foreground">jam</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -237,27 +304,37 @@ export default function SettingsPage() {
   const { t } = useApp();
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   // State untuk task settings
-  const [defaultCriticalDue, setDefaultCriticalDueState] = useState(24); // default 24 jam
+  const [defaultCriticalDue, setDefaultCriticalDueState] = useState(24);
+  const [defaultHighDue, setDefaultHighDueState] = useState(48);
+  const [defaultMediumDue, setDefaultMediumDueState] = useState(72);
+  const [defaultLowDue, setDefaultLowDueState] = useState(168);
   const [enableAutoDue, setEnableAutoDueState] = useState(true);
 
   // Sync localStorage hanya di client
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedDue = Number(localStorage.getItem('defaultCriticalDue'));
-      setDefaultCriticalDueState(isNaN(storedDue) ? 24 : storedDue);
+      const storedCritical = Number(localStorage.getItem('defaultCriticalDue'));
+      setDefaultCriticalDueState(isNaN(storedCritical) || storedCritical === 0 ? 24 : storedCritical);
+      
+      const storedHigh = Number(localStorage.getItem('defaultHighDue'));
+      setDefaultHighDueState(isNaN(storedHigh) || storedHigh === 0 ? 48 : storedHigh);
+      
+      const storedMedium = Number(localStorage.getItem('defaultMediumDue'));
+      setDefaultMediumDueState(isNaN(storedMedium) || storedMedium === 0 ? 72 : storedMedium);
+      
+      const storedLow = Number(localStorage.getItem('defaultLowDue'));
+      setDefaultLowDueState(isNaN(storedLow) || storedLow === 0 ? 168 : storedLow);
+      
       setEnableAutoDueState(localStorage.getItem('enableAutoDue') !== 'false');
     }
   }, []);
 
   // Simpan ke localStorage jika berubah (client only)
-  const setDefaultCriticalDue = (val: number) => {
-    setDefaultCriticalDueState(val);
-    if (typeof window !== 'undefined') localStorage.setItem('defaultCriticalDue', String(val));
-  };
-  const setEnableAutoDue = (val: boolean) => {
-    setEnableAutoDueState(val);
-    if (typeof window !== 'undefined') localStorage.setItem('enableAutoDue', String(val));
-  };
+  const setDefaultCriticalDue = (val: number) => { setDefaultCriticalDueState(val); if (typeof window !== 'undefined') localStorage.setItem('defaultCriticalDue', String(val)); };
+  const setDefaultHighDue = (val: number) => { setDefaultHighDueState(val); if (typeof window !== 'undefined') localStorage.setItem('defaultHighDue', String(val)); };
+  const setDefaultMediumDue = (val: number) => { setDefaultMediumDueState(val); if (typeof window !== 'undefined') localStorage.setItem('defaultMediumDue', String(val)); };
+  const setDefaultLowDue = (val: number) => { setDefaultLowDueState(val); if (typeof window !== 'undefined') localStorage.setItem('defaultLowDue', String(val)); };
+  const setEnableAutoDue = (val: boolean) => { setEnableAutoDueState(val); if (typeof window !== 'undefined') localStorage.setItem('enableAutoDue', String(val)); };
 
   const tabs: { id: SettingsTab | 'task'; label: string; icon: React.ReactNode }[] = [
     { id: 'profile', label: t.settings.profile, icon: <User size={16} /> },
@@ -273,7 +350,13 @@ export default function SettingsPage() {
     profile: <ProfileTab />,
     notifications: <NotificationsTab />,
     integrations: <IntegrationsTab />,
-    task: <TaskSettingsTab defaultCriticalDue={defaultCriticalDue} setDefaultCriticalDue={setDefaultCriticalDue} enableAutoDue={enableAutoDue} setEnableAutoDue={setEnableAutoDue} />,
+    task: <TaskSettingsTab 
+      defaultCriticalDue={defaultCriticalDue} setDefaultCriticalDue={setDefaultCriticalDue} 
+      defaultHighDue={defaultHighDue} setDefaultHighDue={setDefaultHighDue} 
+      defaultMediumDue={defaultMediumDue} setDefaultMediumDue={setDefaultMediumDue} 
+      defaultLowDue={defaultLowDue} setDefaultLowDue={setDefaultLowDue} 
+      enableAutoDue={enableAutoDue} setEnableAutoDue={setEnableAutoDue} 
+    />,
     appearance: <AppearanceTab />,
     security: <SecurityTab />,
     data: <DataTab />,

@@ -8,6 +8,7 @@ import {
   Paperclip,
   Smile,
   Send,
+  Check,
   CheckCheck,
   FileText,
   Image as ImageIcon,
@@ -63,6 +64,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
   const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
   const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [channelMentionQuery, setChannelMentionQuery] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -99,19 +101,25 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
 
     // Mention detection
     const lastWord = val.split(' ').pop();
-    if (lastWord && lastWord.startsWith('@')) {
+    if (lastWord !== undefined && lastWord.startsWith('@')) {
       setMentionQuery(lastWord.slice(1).toLowerCase());
+      setChannelMentionQuery(null);
+    } else if (lastWord !== undefined && lastWord.startsWith('#')) {
+      setChannelMentionQuery(lastWord.slice(1).toLowerCase());
+      setMentionQuery(null);
     } else {
       setMentionQuery(null);
+      setChannelMentionQuery(null);
     }
   };
 
-  const insertMention = (name: string) => {
+  const insertMention = (name: string, prefix: string = '@') => {
     const words = input.split(' ');
     words.pop();
-    const newText = [...words, `@${name} `].join(' ');
+    const newText = [...words, `${prefix}${name} `].join(' ');
     setInput(newText);
     setMentionQuery(null);
+    setChannelMentionQuery(null);
     inputRef.current?.focus();
   };
 
@@ -371,7 +379,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
       </div>
 
       <div className="px-3 md:px-5 py-3 md:py-4 border-t border-border dark:border-gray-700 shrink-0 bg-white dark:bg-gray-900 relative">
-        {/* Mentions Dropdown */}
+        {/* Mentions Dropdown (@) */}
         {mentionQuery !== null && (
           <div className="absolute bottom-full left-5 mb-2 w-64 bg-white dark:bg-gray-800 border border-border dark:border-gray-700 rounded-xl shadow-dropdown z-50 overflow-hidden animate-slide-up max-h-60 overflow-y-auto scrollbar-thin">
             <div className="px-3 py-2 text-[11px] font-medium text-muted-foreground bg-muted/50 dark:bg-gray-800/50 border-b border-border dark:border-gray-700">
@@ -380,7 +388,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
             {mockMembers.filter(m => m.name.toLowerCase().includes(mentionQuery) || m.role.toLowerCase().includes(mentionQuery)).map(m => (
               <button
                 key={m.id}
-                onClick={() => insertMention(m.name)}
+                onClick={() => insertMention(m.name, '@')}
                 className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted dark:hover:bg-gray-700 transition-colors text-left"
               >
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarColors[m.avatar] || 'bg-slate-100 text-slate-600'}`}>
@@ -394,6 +402,32 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
             ))}
             {mockMembers.filter(m => m.name.toLowerCase().includes(mentionQuery) || m.role.toLowerCase().includes(mentionQuery)).length === 0 && (
               <div className="px-3 py-4 text-center text-[12px] text-muted-foreground">No members found</div>
+            )}
+          </div>
+        )}
+
+        {/* Channel Mentions Dropdown (#) */}
+        {channelMentionQuery !== null && (
+          <div className="absolute bottom-full left-5 mb-2 w-64 bg-white dark:bg-gray-800 border border-border dark:border-gray-700 rounded-xl shadow-dropdown z-50 overflow-hidden animate-slide-up max-h-60 overflow-y-auto scrollbar-thin">
+            <div className="px-3 py-2 text-[11px] font-medium text-muted-foreground bg-muted/50 dark:bg-gray-800/50 border-b border-border dark:border-gray-700">
+              Channels
+            </div>
+            {['general', 'design', 'development', 'announcements'].filter(c => c.includes(channelMentionQuery)).map(c => (
+              <button
+                key={c}
+                onClick={() => insertMention(c, '#')}
+                className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted dark:hover:bg-gray-700 transition-colors text-left"
+              >
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <Hash size={12} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-foreground dark:text-white truncate">#{c}</p>
+                </div>
+              </button>
+            ))}
+            {['general', 'design', 'development', 'announcements'].filter(c => c.includes(channelMentionQuery)).length === 0 && (
+              <div className="px-3 py-4 text-center text-[12px] text-muted-foreground">No channels found</div>
             )}
           </div>
         )}
