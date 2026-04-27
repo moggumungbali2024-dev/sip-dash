@@ -317,6 +317,79 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
+-- ==========================================
+-- 10. NOTIFICATIONS
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    type TEXT NOT NULL DEFAULT 'system', -- task, mention, chat, system
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT false,
+    link TEXT,
+    meta JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ==========================================
+-- 11. SETTINGS
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.settings (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL UNIQUE,
+    default_critical_due INTEGER DEFAULT 24,
+    default_high_due INTEGER DEFAULT 48,
+    default_medium_due INTEGER DEFAULT 72,
+    default_low_due INTEGER DEFAULT 168,
+    enable_auto_due BOOLEAN DEFAULT true,
+    notify_gotify BOOLEAN DEFAULT true,
+    notify_gowa BOOLEAN DEFAULT true,
+    language TEXT DEFAULT 'id',
+    theme TEXT DEFAULT 'light',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ==========================================
+-- RLS for NOTIFICATIONS
+-- ==========================================
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read own notifications" ON public.notifications;
+CREATE POLICY "Users can read own notifications" ON public.notifications
+    FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Service role can insert notifications" ON public.notifications;
+CREATE POLICY "Service role can insert notifications" ON public.notifications
+    FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
+CREATE POLICY "Users can update own notifications" ON public.notifications
+    FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own notifications" ON public.notifications;
+CREATE POLICY "Users can delete own notifications" ON public.notifications
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- ==========================================
+-- RLS for SETTINGS
+-- ==========================================
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read own settings" ON public.settings;
+CREATE POLICY "Users can read own settings" ON public.settings
+    FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can upsert own settings" ON public.settings;
+CREATE POLICY "Users can upsert own settings" ON public.settings
+    FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- Trigger for settings updated_at
+DROP TRIGGER IF EXISTS handle_settings_updated_at ON public.settings;
+CREATE TRIGGER handle_settings_updated_at BEFORE UPDATE ON public.settings FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+DROP TRIGGER IF EXISTS handle_notifications_updated_at ON public.notifications;
+
 -- ==============================================================================
 -- END OF SCHEMA
 -- ==============================================================================

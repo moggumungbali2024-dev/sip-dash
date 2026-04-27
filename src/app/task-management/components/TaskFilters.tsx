@@ -41,10 +41,10 @@ export default function TaskFiltersComponent({ filters, onChange, tasks }: TaskF
     onChange({ search: '', status: 'all', priority: 'all', assignee: 'all', project: 'all' });
 
   return (
-    <div className="flex md:flex-wrap items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide snap-x w-full bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl px-4 py-3 shadow-card">
+    <div className="grid grid-cols-2 md:flex md:flex-wrap items-center gap-3 w-full bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl p-3 md:px-4 md:py-3 shadow-card">
       {/* Search */}
-      <div className="flex items-center gap-2 bg-muted dark:bg-gray-800 rounded-lg px-3 py-1.5 flex-1 min-w-[200px] snap-start shrink-0">
-        <Search size={13} className="text-muted-foreground shrink-0" />
+      <div className="col-span-2 flex items-center gap-2 bg-muted dark:bg-gray-800 rounded-lg px-3 py-2 md:py-1.5 md:flex-1 md:min-w-[200px]">
+        <Search size={14} className="text-muted-foreground shrink-0" />
         <input
           type="text"
           value={filters.search}
@@ -54,7 +54,7 @@ export default function TaskFiltersComponent({ filters, onChange, tasks }: TaskF
         />
         {filters.search && (
           <button onClick={() => set('search', '')} className="text-muted-foreground hover:text-foreground">
-            <X size={12} />
+            <X size={14} />
           </button>
         )}
       </div>
@@ -63,7 +63,7 @@ export default function TaskFiltersComponent({ filters, onChange, tasks }: TaskF
       <select
         value={filters.status}
         onChange={(e) => set('status', e.target.value)}
-        className="text-[13px] border border-border dark:border-gray-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-800 dark:text-white text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer snap-start shrink-0"
+        className="w-full text-[13px] border border-border dark:border-gray-700 rounded-lg px-2.5 py-2 md:py-1.5 bg-white dark:bg-gray-800 dark:text-white text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer md:w-auto"
       >
         {statusOptions.map((o) => (
           <option key={`status-opt-${o.value}`} value={o.value}>{o.label}</option>
@@ -74,7 +74,7 @@ export default function TaskFiltersComponent({ filters, onChange, tasks }: TaskF
       <select
         value={filters.priority}
         onChange={(e) => set('priority', e.target.value)}
-        className="text-[13px] border border-border dark:border-gray-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-800 dark:text-white text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer snap-start shrink-0"
+        className="w-full text-[13px] border border-border dark:border-gray-700 rounded-lg px-2.5 py-2 md:py-1.5 bg-white dark:bg-gray-800 dark:text-white text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer md:w-auto"
       >
         {priorityOptions.map((o) => (
           <option key={`priority-opt-${o.value}`} value={o.value}>{o.label}</option>
@@ -85,7 +85,7 @@ export default function TaskFiltersComponent({ filters, onChange, tasks }: TaskF
       <select
         value={filters.assignee}
         onChange={(e) => set('assignee', e.target.value)}
-        className="text-[13px] border border-border dark:border-gray-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-800 dark:text-white text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer snap-start shrink-0"
+        className="w-full text-[13px] border border-border dark:border-gray-700 rounded-lg px-2.5 py-2 md:py-1.5 bg-white dark:bg-gray-800 dark:text-white text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer md:w-auto"
       >
         <option value="all">All Assignees</option>
         {mockMembers.map((m) => (
@@ -97,7 +97,7 @@ export default function TaskFiltersComponent({ filters, onChange, tasks }: TaskF
       <select
         value={filters.project}
         onChange={(e) => set('project', e.target.value)}
-        className="text-[13px] border border-border dark:border-gray-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-800 dark:text-white text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer snap-start shrink-0"
+        className="w-full text-[13px] border border-border dark:border-gray-700 rounded-lg px-2.5 py-2 md:py-1.5 bg-white dark:bg-gray-800 dark:text-white text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer md:w-auto"
       >
         <option value="all">All Projects</option>
         {mockProjects.map((p) => (
@@ -109,9 +109,9 @@ export default function TaskFiltersComponent({ filters, onChange, tasks }: TaskF
       {hasActiveFilters && (
         <button
           onClick={reset}
-          className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-muted transition-colors duration-150 snap-start shrink-0"
+          className="col-span-2 md:col-span-1 flex items-center justify-center gap-1 text-[13px] text-muted-foreground hover:text-foreground px-2 py-2 md:py-1.5 rounded-lg hover:bg-muted transition-colors duration-150"
         >
-          <X size={12} />
+          <X size={14} />
           Clear
         </button>
       )}

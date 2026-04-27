@@ -14,7 +14,11 @@ export const metadata: Metadata = {
   description:
     'Manage tasks, monitor team activity, and automate WhatsApp reminders — all in one dashboard built for modern Indonesian teams.',
   icons: {
-    icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
+    icon: [
+      { url: '/assets/images/app_logo.png', type: 'image/png' },
+      { url: '/favicon.ico', type: 'image/x-icon' },
+    ],
+    apple: '/assets/images/app_logo.png',
   },
 };
 

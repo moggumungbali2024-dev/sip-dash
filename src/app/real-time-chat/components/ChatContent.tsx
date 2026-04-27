@@ -1,45 +1,112 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChatSidebar from './ChatSidebar';
 import ChatMessageArea from './ChatMessageArea';
 import ChatInfoPanel from './ChatInfoPanel';
-import { mockChannels, mockMessages } from './chatMockData';
-import { ChatMessage } from './chatTypes';
+import { mockChannels } from './chatMockData';
+import { ChatChannel, ChatMessage } from './chatTypes';
+import { useChatChannels, useChatMessages, useProfiles } from '@/lib/useSupabase';
+
+// Adapter: DB channel → ChatChannel shape
+function dbChannelToChatChannel(ch: any): ChatChannel {
+  return {
+    id: ch.id,
+    name: ch.name || 'Unnamed',
+    type: ch.type === 'dm' ? 'dm' : 'channel',
+    description: ch.description || '',
+    memberCount: 0,
+    unreadCount: 0,
+    lastMessage: '',
+    lastMessageTime: ch.updated_at,
+    waBridge: ch.wa_bridge || false,
+    online: false,
+  };
+}
+
+// Adapter: DB message → ChatMessage shape
+function dbMsgToChatMsg(m: any, myId: string): ChatMessage {
+  return {
+    id: m.id,
+    channelId: m.channel_id,
+    senderId: m.sender_id,
+    senderName: m.sender?.name || 'Unknown',
+    senderAvatar: m.sender?.avatar || '??',
+    senderRole: m.sender?.role || '',
+    content: m.content,
+    timestamp: m.created_at,
+    status: (m.status as any) || 'sent',
+    reactions: [],
+    isMe: m.sender_id === myId,
+  };
+}
+
+// Placeholder "me" — replace with useSupabaseUser() when auth is live
+const ME_ID = 'member-001';
+const ME_NAME = 'Andi Susanto';
+const ME_AVATAR = 'AS';
 
 export default function ChatContent() {
-  const [activeChannelId, setActiveChannelId] = useState('ch-engineering');
-  const [messages, setMessages] = useState<Record<string, ChatMessage[]>>(mockMessages);
+  const { channels: dbChannels, loading: chLoading, createChannel } = useChatChannels();
+  const { profiles } = useProfiles();
+
+  // Use DB channels if available, else mock
+  const channels: ChatChannel[] = dbChannels.length > 0
+    ? dbChannels.map(dbChannelToChatChannel)
+    : mockChannels;
+
+  const [activeChannelId, setActiveChannelId] = useState('');
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const activeChannel = mockChannels.find((c) => c.id === activeChannelId);
-  const activeMessages = messages[activeChannelId] || [];
+  // Set initial channel when channels load
+  useEffect(() => {
+    if (channels.length > 0 && !activeChannelId) {
+      setActiveChannelId(channels[0].id);
+    }
+  }, [channels, activeChannelId]);
 
-  const handleSendMessage = (content: string) => {
-    // Backend: INSERT into supabase chat_messages table → real-time broadcast via Supabase Realtime
-    const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      channelId: activeChannelId,
-      senderId: 'member-001',
-      senderName: 'Andi Susanto',
-      senderAvatar: 'AS',
-      senderRole: 'Manager',
-      content,
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-      reactions: [],
-      isMe: true,
-    };
-    setMessages((prev) => ({
-      ...prev,
-      [activeChannelId]: [...(prev[activeChannelId] || []), newMsg],
-    }));
+  const { messages: dbMessages, sendMessage, loading: msgsLoading } = useChatMessages(activeChannelId || null);
+
+  // For mock channels, use local message state
+  const [localMessages, setLocalMessages] = useState<Record<string, ChatMessage[]>>({});
+
+  const activeChannel = channels.find((c) => c.id === activeChannelId) || null;
+
+  // Decide which message set to use
+  const isUsingDb = dbChannels.length > 0;
+  const activeMessages: ChatMessage[] = isUsingDb
+    ? dbMessages.map((m) => dbMsgToChatMsg(m, ME_ID))
+    : (localMessages[activeChannelId] || []);
+
+  const handleSendMessage = async (content: string) => {
+    if (isUsingDb) {
+      await sendMessage(content, ME_ID);
+    } else {
+      // Local mock
+      const newMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        channelId: activeChannelId,
+        senderId: ME_ID,
+        senderName: ME_NAME,
+        senderAvatar: ME_AVATAR,
+        senderRole: 'Manager',
+        content,
+        timestamp: new Date().toISOString(),
+        status: 'sent',
+        reactions: [],
+        isMe: true,
+      };
+      setLocalMessages((prev) => ({
+        ...prev,
+        [activeChannelId]: [...(prev[activeChannelId] || []), newMsg],
+      }));
+    }
   };
 
   const handleReaction = (messageId: string, emoji: string) => {
-    // Backend: UPSERT into message_reactions table
-    setMessages((prev) => {
+    // Local-only for now
+    setLocalMessages((prev) => {
       const msgs = prev[activeChannelId] || [];
       return {
         ...prev,
@@ -49,9 +116,9 @@ export default function ChatContent() {
           if (existing) {
             return {
               ...m,
-              reactions: m.reactions.map((r) =>
-                r.emoji === emoji ? { ...r, count: r.byMe ? r.count - 1 : r.count + 1, byMe: !r.byMe } : r
-              ).filter((r) => r.count > 0),
+              reactions: m.reactions
+                .map((r) => r.emoji === emoji ? { ...r, count: r.byMe ? r.count - 1 : r.count + 1, byMe: !r.byMe } : r)
+                .filter((r) => r.count > 0),
             };
           }
           return { ...m, reactions: [...m.reactions, { emoji, count: 1, byMe: true }] };
@@ -62,7 +129,14 @@ export default function ChatContent() {
 
   const handleSelectChannel = (id: string) => {
     setActiveChannelId(id);
-    setMobileSidebarOpen(false); // close sidebar on mobile after selection
+    setMobileSidebarOpen(false);
+  };
+
+  const handleCreateChannel = async (name: string) => {
+    if (isUsingDb) {
+      const ch = await createChannel(name, 'channel');
+      if (ch) setActiveChannelId(ch.id);
+    }
   };
 
   return (
@@ -75,7 +149,7 @@ export default function ChatContent() {
         />
       )}
 
-      {/* Sidebar — hidden on mobile unless mobileSidebarOpen */}
+      {/* Sidebar */}
       <div
         className={`
           fixed md:static inset-y-0 left-0 z-40 md:z-auto
@@ -85,28 +159,31 @@ export default function ChatContent() {
         style={{ top: 64 }}
       >
         <ChatSidebar
-          channels={mockChannels}
+          channels={channels}
           activeId={activeChannelId}
           onSelect={handleSelectChannel}
           onClose={() => setMobileSidebarOpen(false)}
+          onCreateChannel={handleCreateChannel}
+          members={profiles}
         />
       </div>
 
       {/* Message area */}
       <ChatMessageArea
-        channel={activeChannel || null}
+        channel={activeChannel}
         messages={activeMessages}
         onSend={handleSendMessage}
         onReaction={handleReaction}
         onToggleInfo={() => setInfoPanelOpen((p) => !p)}
         onToggleSidebar={() => setMobileSidebarOpen((p) => !p)}
         infoPanelOpen={infoPanelOpen}
+        channels={channels}
+        loading={msgsLoading}
       />
 
-      {/* Info panel — hidden on mobile unless infoPanelOpen, slide in from right */}
+      {/* Info panel */}
       {infoPanelOpen && activeChannel && (
         <>
-          {/* Mobile overlay */}
           <div
             className="md:hidden fixed inset-0 bg-black/50 z-30"
             onClick={() => setInfoPanelOpen(false)}

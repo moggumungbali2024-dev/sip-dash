@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { useApp } from '@/lib/AppContext';
-import { Bell, CheckSquare, MessageSquare, AlertTriangle, Settings, Users, Check, Trash2,  } from 'lucide-react';
+import { Bell, CheckSquare, MessageSquare, AlertTriangle, Settings, Users, Check, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Notification {
   id: string;
@@ -43,8 +44,15 @@ type FilterKey = 'all' | 'unread' | 'mention' | 'task' | 'system';
 
 export default function NotificationsPage() {
   const { t, language } = useApp();
+  const router = useRouter();
   const [notifications, setNotifications] = useState(initialNotifications);
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+
+  const getLink = (type: string) => {
+    if (type === 'task') return '/task-management';
+    if (type === 'chat' || type === 'mention') return '/real-time-chat';
+    return '/settings';
+  };
 
   const filters: { key: FilterKey; label: string }[] = [
     { key: 'all', label: t.notifications.allNotifications },
@@ -142,9 +150,10 @@ export default function NotificationsPage() {
               return (
                 <div
                   key={notif.id}
-                  className={`flex items-start gap-4 p-4 rounded-xl border transition-all duration-150 group ${
+                  onClick={() => { markRead(notif.id); router.push(getLink(notif.type)); }}
+                  className={`flex items-start gap-4 p-4 rounded-xl border transition-all duration-150 group cursor-pointer ${
                     !notif.read
-                      ? 'bg-primary/3 border-primary/20 dark:bg-primary/5 dark:border-primary/20' :'bg-white dark:bg-gray-900 border-border dark:border-gray-700 hover:bg-muted/20 dark:hover:bg-gray-800/50'
+                      ? 'bg-primary/3 border-primary/20 dark:bg-primary/5 dark:border-primary/20 hover:bg-primary/6 dark:hover:bg-primary/10' :'bg-white dark:bg-gray-900 border-border dark:border-gray-700 hover:bg-muted/40 dark:hover:bg-gray-800/50'
                   }`}
                 >
                   {/* Avatar */}

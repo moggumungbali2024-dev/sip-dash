@@ -10,6 +10,8 @@ interface Props {
   activeId: string;
   onSelect: (id: string) => void;
   onClose?: () => void;
+  onCreateChannel?: (name: string) => void;
+  members?: { id: string; name: string; avatar: string; role: string; status?: string }[];
 }
 
 function formatTime(ts?: string) {
@@ -33,12 +35,13 @@ const avatarColors: Record<string, string> = {
   HW: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400',
 };
 
-export default function ChatSidebar({ channels, activeId, onSelect, onClose }: Props) {
+export default function ChatSidebar({ channels, activeId, onSelect, onClose, onCreateChannel, members = [] }: Props) {
   const [channelsOpen, setChannelsOpen] = useState(true);
   const [dmsOpen, setDmsOpen] = useState(true);
   const [search, setSearch] = useState('');
   const [showNewChannel, setShowNewChannel] = useState(false);
   const [showNewMessage, setShowNewMessage] = useState(false);
+  const [newChannelName, setNewChannelName] = useState('');
 
   const groupChannels = channels.filter((c) => c.type === 'channel');
   const dmChannels = channels.filter((c) => c.type === 'dm');
@@ -216,10 +219,14 @@ export default function ChatSidebar({ channels, activeId, onSelect, onClose }: P
                 <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Channel Name</label>
                 <div className="flex items-center bg-background dark:bg-gray-800 border border-border dark:border-gray-700 rounded-lg px-3 overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
                   <span className="text-muted-foreground mr-1">#</span>
-                  <input type="text" placeholder="e.g. design-team" className="w-full py-2 text-[13px] bg-transparent text-foreground dark:text-white outline-none" autoFocus />
+              <input type="text" placeholder="e.g. design-team" value={newChannelName} onChange={(e) => setNewChannelName(e.target.value)} className="w-full py-2 text-[13px] bg-transparent text-foreground dark:text-white outline-none" autoFocus />
                 </div>
               </div>
-              <button onClick={() => { toast.success('Channel created (mock)'); setShowNewChannel(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
+              <button onClick={() => {
+                if (newChannelName.trim()) { onCreateChannel?.(newChannelName.trim()); setNewChannelName(''); }
+                toast.success('Channel created');
+                setShowNewChannel(false);
+              }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
                 Create Channel
               </button>
             </div>
@@ -240,9 +247,25 @@ export default function ChatSidebar({ channels, activeId, onSelect, onClose }: P
             <div className="p-5 space-y-4">
               <div>
                 <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Search User</label>
-                <input type="text" placeholder="Type a name or email..." className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" autoFocus />
+                {members.length > 0 ? (
+                  <div className="max-h-48 overflow-y-auto scrollbar-thin space-y-1">
+                    {members.map((m) => (
+                      <button key={m.id} onClick={() => { onSelect(m.id); setShowNewMessage(false); toast.info(`Opening DM with ${m.name}`); }}
+                        className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted dark:hover:bg-gray-700 rounded-lg transition-colors text-left">
+                        <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-[11px] font-bold text-primary">{m.avatar}</div>
+                        <div>
+                          <p className="text-[13px] font-medium text-foreground dark:text-white">{m.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{m.role}</p>
+                        </div>
+                        <span className={`ml-auto w-2 h-2 rounded-full ${m.status === 'online' ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <input type="text" placeholder="Type a name or email..." className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" autoFocus />
+                )}
               </div>
-              <button onClick={() => { toast.success('Starting conversation (mock)'); setShowNewMessage(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
+              <button onClick={() => { toast.success('Starting conversation'); setShowNewMessage(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
                 Start Chat
               </button>
             </div>

@@ -13,6 +13,8 @@ interface CreateTaskModalProps {
   onClose: () => void;
   onCreate: (data: Partial<Task>) => void;
   initialData?: Task | null;
+  members?: { id: string; name: string; avatar: string; role: string; department?: string }[];
+  projects?: string[];
 }
 
 
@@ -26,12 +28,14 @@ interface FormData {
   tags: string;
 }
 
-export default function CreateTaskModal({ open, onClose, onCreate, initialData }: CreateTaskModalProps) {
+export default function CreateTaskModal({ open, onClose, onCreate, initialData, members: propMembers, projects: propProjects }: CreateTaskModalProps) {
   const [waReminder, setWaReminder] = useState(initialData?.waReminder ?? true);
   const [submitting, setSubmitting] = useState(false);
-  // Ambil setting dari localStorage (client only)
   const [defaultDueDates, setDefaultDueDates] = useState({ critical: 24, high: 48, medium: 72, low: 168 });
   const [enableAutoDue, setEnableAutoDue] = useState(true);
+
+  const members = propMembers?.length ? propMembers : mockMembers;
+  const projects = propProjects?.length ? propProjects : mockProjects;
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -100,23 +104,23 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
   const selectedPriority = useWatch({ control, name: 'priority' });
   const selectedDueDate = useWatch({ control, name: 'dueDate' });
 
-  // Auto-set Due Date when Priority changes
+  // Auto-set Due Date when Priority changes — always apply when priority is picked
   useEffect(() => {
-    if (enableAutoDue && selectedPriority && !selectedDueDate) {
-      const p = selectedPriority as keyof typeof defaultDueDates;
-      if (defaultDueDates[p]) {
-        const now = new Date();
-        now.setHours(now.getHours() + defaultDueDates[p]);
-        setValue('dueDate', now.toISOString().split('T')[0], { shouldValidate: true });
-      }
-    }
-  }, [selectedPriority, enableAutoDue, defaultDueDates, selectedDueDate, setValue]);
+    if (!enableAutoDue || !selectedPriority) return;
+    const p = selectedPriority as keyof typeof defaultDueDates;
+    const hours = defaultDueDates[p];
+    if (!hours) return;
+    const now = new Date();
+    now.setHours(now.getHours() + hours);
+    setValue('dueDate', now.toISOString().split('T')[0], { shouldValidate: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPriority, enableAutoDue, defaultDueDates]);
 
   const onSubmit = (data: FormData) => {
     setSubmitting(true);
-    let dueDate = data.dueDate;
+    const dueDate = data.dueDate;
     setTimeout(() => {
-      const assignee = mockMembers.find((m) => m.id === data.assigneeId) || mockMembers[0];
+      const assignee = members.find((m) => m.id === data.assigneeId) || members[0];
       onCreate({
         title: data.title,
         description: data.description,
@@ -130,7 +134,7 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
       setSubmitting(false);
       reset();
       setWaReminder(true);
-    }, 800);
+    }, 400);
   };
 
   return (
@@ -189,7 +193,7 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
               className="w-full px-3 py-2 text-[13.5px] border border-border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
             >
               <option value="">Select project...</option>
-              {mockProjects.map((p) => (
+              {projects.map((p) => (
                 <option key={`create-project-${p}`} value={p}>{p}</option>
               ))}
             </select>
@@ -209,7 +213,7 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
               className="w-full px-3 py-2 text-[13.5px] border border-border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
             >
               <option value="">Select team member...</option>
-              {mockMembers.map((m) => (
+              {members.map((m) => (
                 <option key={`create-assignee-${m.id}`} value={m.id}>
                   {m.name} ({m.role.toUpperCase()})
                 </option>

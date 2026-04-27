@@ -29,6 +29,8 @@ interface Props {
   onToggleInfo: () => void;
   onToggleSidebar: () => void;
   infoPanelOpen: boolean;
+  channels?: ChatChannel[];
+  loading?: boolean;
 }
 
 const avatarColors: Record<string, string> = {
@@ -81,7 +83,7 @@ function renderMessageContent(content: string) {
   });
 }
 
-export default function ChatMessageArea({ channel, messages, onSend, onReaction, onToggleInfo, onToggleSidebar, infoPanelOpen }: Props) {
+export default function ChatMessageArea({ channel, messages, onSend, onReaction, onToggleInfo, onToggleSidebar, infoPanelOpen, channels = [], loading = false }: Props) {
   const [input, setInput] = useState('');
   const [isTyping] = useState(false);
   const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
@@ -435,7 +437,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
             <div className="px-3 py-2 text-[11px] font-medium text-muted-foreground bg-muted/50 dark:bg-gray-800/50 border-b border-border dark:border-gray-700">
               Channels
             </div>
-            {['general', 'design', 'development', 'announcements'].filter(c => c.includes(channelMentionQuery)).map(c => (
+            {(channels.length > 0 ? channels.map(c => c.name) : ['general', 'design', 'development', 'announcements']).filter(c => c.includes(channelMentionQuery)).map(c => (
               <button
                 key={c}
                 onClick={() => insertMention(c, '#')}
