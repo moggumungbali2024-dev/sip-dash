@@ -85,34 +85,37 @@ function NotificationsTab() {
 }
 
 function IntegrationsTab() {
-  const integrations = [
-    { id: 'supabase', name: 'Supabase', desc: 'Database, Auth & Realtime', status: 'connected' },
-    { id: 'gowa', name: 'GoWa (WhatsApp)', desc: 'WhatsApp messaging engine', status: 'connected' },
-    { id: 'gotify', name: 'Gotify', desc: 'Push notification server', status: 'connected' },
-    { id: 'google-calendar', name: 'Google Calendar', desc: 'Sinkronisasi jadwal & reminder', status: 'disconnected' },
-    { id: 'slack', name: 'Slack', desc: 'Notifikasi ke channel Slack', status: 'disconnected' },
-  ];
+  // ...existing code for integrations
+  // Integrasi real-time status bisa diimplementasikan di sini
+  // ...existing code...
   return (
     <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card overflow-hidden">
       <div className="px-5 py-3.5 border-b border-border dark:border-gray-700">
         <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">Integrasi Layanan</h3>
         <p className="text-[12px] text-muted-foreground mt-0.5">Hubungkan TeamFlow dengan layanan eksternal</p>
       </div>
-      <div className="divide-y divide-border dark:divide-gray-700">
-        {integrations.map((item) => (
-          <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-muted dark:bg-gray-800 flex items-center justify-center"><Plug size={16} className="text-muted-foreground" /></div>
-              <div><p className="text-[13px] font-medium text-foreground dark:text-white">{item.name}</p><p className="text-[11.5px] text-muted-foreground">{item.desc}</p></div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${item.status === 'connected' ? 'bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-slate-100 text-slate-500 dark:bg-gray-700 dark:text-gray-400'}`}>
-                {item.status === 'connected' ? 'Terhubung' : 'Belum terhubung'}
-              </span>
-              <button className="text-[12px] text-primary hover:underline font-medium">{item.status === 'connected' ? 'Kelola' : 'Hubungkan'}</button>
-            </div>
+      {/* ...existing code for integration list... */}
+    </div>
+  );
+}
+
+function TaskSettingsTab({ defaultCriticalDue, setDefaultCriticalDue, enableAutoDue, setEnableAutoDue }) {
+  return (
+    <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card p-5 md:p-6">
+      <h3 className="text-[14px] font-semibold text-foreground dark:text-white mb-4">Task Settings</h3>
+      <div className="flex flex-col gap-4">
+        <div>
+          <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">Auto set due date for Critical priority</label>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={enableAutoDue} onChange={e => setEnableAutoDue(e.target.checked)} />
+            <span className="text-[13px]">Aktifkan otomatis due date 1x24 jam jika priority <b>Critical</b></span>
           </div>
-        ))}
+        </div>
+        <div>
+          <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">Default due date (jam) untuk Critical</label>
+          <input type="number" min={1} max={72} value={defaultCriticalDue} onChange={e => setDefaultCriticalDue(Number(e.target.value))} className="w-24 px-2 py-1 border border-border rounded" />
+          <span className="ml-2 text-[12px] text-muted-foreground">jam setelah dibuat</span>
+        </div>
       </div>
     </div>
   );
@@ -192,19 +195,43 @@ function SecurityTab() {
 export default function SettingsPage() {
   const { t } = useApp();
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  // State untuk task settings
+  const [defaultCriticalDue, setDefaultCriticalDueState] = useState(24); // default 24 jam
+  const [enableAutoDue, setEnableAutoDueState] = useState(true);
 
-  const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
+  // Sync localStorage hanya di client
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedDue = Number(localStorage.getItem('defaultCriticalDue'));
+      setDefaultCriticalDueState(isNaN(storedDue) ? 24 : storedDue);
+      setEnableAutoDueState(localStorage.getItem('enableAutoDue') !== 'false');
+    }
+  }, []);
+
+  // Simpan ke localStorage jika berubah (client only)
+  const setDefaultCriticalDue = (val: number) => {
+    setDefaultCriticalDueState(val);
+    if (typeof window !== 'undefined') localStorage.setItem('defaultCriticalDue', String(val));
+  };
+  const setEnableAutoDue = (val: boolean) => {
+    setEnableAutoDueState(val);
+    if (typeof window !== 'undefined') localStorage.setItem('enableAutoDue', String(val));
+  };
+
+  const tabs: { id: SettingsTab | 'task'; label: string; icon: React.ReactNode }[] = [
     { id: 'profile', label: t.settings.profile, icon: <User size={16} /> },
     { id: 'notifications', label: t.settings.notificationsTab, icon: <Bell size={16} /> },
     { id: 'integrations', label: t.settings.integrations, icon: <Plug size={16} /> },
+    { id: 'task', label: 'Task', icon: <Check size={16} /> },
     { id: 'appearance', label: t.settings.appearance, icon: <Palette size={16} /> },
     { id: 'security', label: t.settings.security, icon: <Shield size={16} /> },
   ];
 
-  const tabContent: Record<SettingsTab, React.ReactNode> = {
+  const tabContent: Record<string, React.ReactNode> = {
     profile: <ProfileTab />,
     notifications: <NotificationsTab />,
     integrations: <IntegrationsTab />,
+    task: <TaskSettingsTab defaultCriticalDue={defaultCriticalDue} setDefaultCriticalDue={setDefaultCriticalDue} enableAutoDue={enableAutoDue} setEnableAutoDue={setEnableAutoDue} />,
     appearance: <AppearanceTab />,
     security: <SecurityTab />,
   };
@@ -220,7 +247,7 @@ export default function SettingsPage() {
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => setActiveTab(tab.id as SettingsTab)}
                     className={`flex items-center justify-between px-4 py-3 text-left transition-colors duration-150 border-b border-border dark:border-gray-700 last:border-b-0 whitespace-nowrap md:whitespace-normal ${activeTab === tab.id ? 'bg-primary/5 dark:bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted dark:hover:bg-gray-800 hover:text-foreground dark:hover:text-white'}`}
                   >
                     <div className="flex items-center gap-2.5">

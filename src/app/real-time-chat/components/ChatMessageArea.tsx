@@ -54,7 +54,7 @@ function formatDateSeparator(ts: string) {
   return d.toLocaleDateString('en-ID', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-const EMOJI_QUICK = ['👍', '❤️', '😂', '🎉', '🔥', '✅'];
+const EMOJI_QUICK = ['👍', '❤️', '😂', '🎉', '🔥', '✅', '👀', '💯', '🙌', '🚀'];
 
 export default function ChatMessageArea({ channel, messages, onSend, onReaction, onToggleInfo, onToggleSidebar, infoPanelOpen }: Props) {
   const [input, setInput] = useState('');
@@ -298,7 +298,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
                     </button>
                     {emojiPickerFor === msg.id && (
                       <div
-                        className={`absolute ${msg.isMe ? 'right-0' : 'left-0'} top-full mt-1 flex gap-1 bg-white dark:bg-gray-800 border border-border dark:border-gray-700 rounded-lg shadow-dropdown p-1.5 z-20 animate-fade-in`}
+                        className={`absolute ${msg.isMe ? 'right-0' : 'left-0'} bottom-full mb-1 w-[150px] flex flex-wrap gap-1 bg-white dark:bg-gray-800 border border-border dark:border-gray-700 rounded-lg shadow-dropdown p-2 z-50 animate-fade-in`}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {EMOJI_QUICK.map((emoji) => (

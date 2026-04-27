@@ -25,9 +25,19 @@ interface FormData {
   tags: string;
 }
 
-export default function CreateTaskModal({ open, onClose, onCreate, initialData }: CreateTaskModalProps) {
   const [waReminder, setWaReminder] = useState(initialData?.waReminder ?? true);
   const [submitting, setSubmitting] = useState(false);
+  // Ambil setting dari localStorage (client only)
+  const [defaultCriticalDue, setDefaultCriticalDue] = useState(24);
+  const [enableAutoDue, setEnableAutoDue] = useState(true);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedDue = Number(localStorage.getItem('defaultCriticalDue'));
+      setDefaultCriticalDue(isNaN(storedDue) ? 24 : storedDue);
+      setEnableAutoDue(localStorage.getItem('enableAutoDue') !== 'false');
+    }
+  }, []);
 
   const {
     register,
@@ -54,9 +64,25 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
     }
   }, [initialData, open, reset]);
 
+  // Sync setting dari localStorage jika berubah
+  React.useEffect(() => {
+    const handleStorage = () => {
+      setDefaultCriticalDue(Number(localStorage.getItem('defaultCriticalDue') || 24));
+      setEnableAutoDue(localStorage.getItem('enableAutoDue') !== 'false');
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const onSubmit = (data: FormData) => {
     setSubmitting(true);
-    // Backend: POST /api/tasks — Supabase insert, then GoWa sends WA assignment notification
+    // Jika priority critical dan setting aktif, set due date otomatis jika kosong
+    let dueDate = data.dueDate;
+    if (enableAutoDue && data.priority === 'critical' && !dueDate) {
+      const now = new Date();
+      now.setHours(now.getHours() + defaultCriticalDue);
+      dueDate = now.toISOString().split('T')[0];
+    }
     setTimeout(() => {
       const assignee = mockMembers.find((m) => m.id === data.assigneeId) || mockMembers[0];
       onCreate({
@@ -65,7 +91,7 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
         priority: data.priority as Task['priority'],
         project: data.project,
         assignee,
-        dueDate: data.dueDate,
+        dueDate,
         waReminder,
         tags: data.tags ? data.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
       });

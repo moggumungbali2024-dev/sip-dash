@@ -189,7 +189,7 @@ export default function AccessControlPage() {
             <div className="divide-y divide-border dark:divide-gray-700">
               {members.map((member) => (
                 <div key={member.id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 hover:bg-muted/20 dark:hover:bg-gray-800/50 transition-colors duration-150">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 ${member.avatarColor}`}>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 ${member.avatarColor}`}> 
                     {member.avatar}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -197,7 +197,7 @@ export default function AccessControlPage() {
                     <p className="text-[12px] text-muted-foreground">{member.email}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${member.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-slate-100 text-slate-500 dark:bg-gray-700 dark:text-gray-400'}`}>
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${member.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-slate-100 text-slate-500 dark:bg-gray-700 dark:text-gray-400'}`}> 
                       {member.status === 'active' ? t.common.active : t.common.inactive}
                     </span>
                     <div className="relative">
@@ -228,7 +228,7 @@ export default function AccessControlPage() {
               ))}
             </div>
           </div>
-        )}
+        ))}
       </div>
     </AppLayout>
   );
