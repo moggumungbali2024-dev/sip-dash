@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { ChatChannel, ChatMessage } from './chatTypes';
-import { mockMembers } from '../task-management/components/taskMockData';
+import { mockMembers } from '../../task-management/components/taskMockData';
 import { toast } from 'sonner';
 
 interface Props {

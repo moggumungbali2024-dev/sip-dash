@@ -41,6 +41,7 @@ export default function CreateTaskModal({ open, onClose, onCreate, initialData }
     }
   }, []);
 
+  const {
     register,
     handleSubmit,
     reset,
