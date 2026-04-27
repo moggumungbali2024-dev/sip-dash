@@ -58,6 +58,29 @@ function formatDateSeparator(ts: string) {
 
 const EMOJI_QUICK = ['👍', '❤️', '😂', '🎉', '🔥', '✅', '👀', '💯', '🙌', '🚀'];
 
+function renderMessageContent(content: string) {
+  if (!content) return null;
+  // Regex matches @username or #channel
+  const parts = content.split(/(@[a-zA-Z0-9_-]+|#[a-zA-Z0-9_-]+)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('@')) {
+      return (
+        <span key={i} className="text-blue-500 dark:text-blue-400 font-medium cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); toast.info(`Viewing profile: ${part.substring(1)}`); }}>
+          {part}
+        </span>
+      );
+    }
+    if (part.startsWith('#')) {
+      return (
+        <span key={i} className="text-primary font-medium cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); toast.info(`Navigating to channel: ${part.substring(1)}`); }}>
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
 export default function ChatMessageArea({ channel, messages, onSend, onReaction, onToggleInfo, onToggleSidebar, infoPanelOpen }: Props) {
   const [input, setInput] = useState('');
   const [isTyping] = useState(false);
@@ -250,7 +273,7 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
                         : 'bg-muted dark:bg-gray-800 text-foreground dark:text-white rounded-tl-sm'
                     }`}
                   >
-                    {msg.content}
+                    {renderMessageContent(msg.content)}
 
                     {/* Attachments */}
                     {msg.attachments && msg.attachments.length > 0 && (

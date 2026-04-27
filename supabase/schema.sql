@@ -210,41 +210,60 @@ ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 -- Note: In a production app you'd want granular policies.
 -- For sipOS Team Dashboard, we will start with standard authenticated access policies:
 
+DROP POLICY IF EXISTS "Allow authenticated users to read all profiles" ON public.profiles;
 CREATE POLICY "Allow authenticated users to read all profiles" ON public.profiles FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow users to update own profile" ON public.profiles;
 CREATE POLICY "Allow users to update own profile" ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Allow authenticated full access to projects" ON public.projects;
 CREATE POLICY "Allow authenticated full access to projects" ON public.projects FOR ALL TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow authenticated full access to tasks" ON public.tasks;
 CREATE POLICY "Allow authenticated full access to tasks" ON public.tasks FOR ALL TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow authenticated full access to subtasks" ON public.subtasks;
 CREATE POLICY "Allow authenticated full access to subtasks" ON public.subtasks FOR ALL TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow authenticated full access to activity logs" ON public.activity_logs;
 CREATE POLICY "Allow authenticated full access to activity logs" ON public.activity_logs FOR ALL TO authenticated USING (true);
 
 -- Chat permissions
+DROP POLICY IF EXISTS "Allow users to view channels they are in" ON public.chat_channels;
 CREATE POLICY "Allow users to view channels they are in" ON public.chat_channels FOR SELECT TO authenticated USING (
     id IN (SELECT channel_id FROM public.chat_members WHERE user_id = auth.uid()) OR type = 'channel'
 );
+DROP POLICY IF EXISTS "Allow users to insert channels" ON public.chat_channels;
 CREATE POLICY "Allow users to insert channels" ON public.chat_channels FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow users to view members" ON public.chat_members;
 CREATE POLICY "Allow users to view members" ON public.chat_members FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow users to insert members" ON public.chat_members;
 CREATE POLICY "Allow users to insert members" ON public.chat_members FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow users to read messages in their channels" ON public.chat_messages;
 CREATE POLICY "Allow users to read messages in their channels" ON public.chat_messages FOR SELECT TO authenticated USING (
     channel_id IN (SELECT channel_id FROM public.chat_members WHERE user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Allow users to insert messages" ON public.chat_messages;
 CREATE POLICY "Allow users to insert messages" ON public.chat_messages FOR INSERT TO authenticated WITH CHECK (
     channel_id IN (SELECT channel_id FROM public.chat_members WHERE user_id = auth.uid())
 );
 
 -- Calendar permissions
+DROP POLICY IF EXISTS "Allow authenticated full access to calendar events" ON public.calendar_events;
 CREATE POLICY "Allow authenticated full access to calendar events" ON public.calendar_events FOR ALL TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow authenticated full access to calendar members" ON public.calendar_event_members;
 CREATE POLICY "Allow authenticated full access to calendar members" ON public.calendar_event_members FOR ALL TO authenticated USING (true);
 
 -- Document permissions
+DROP POLICY IF EXISTS "Allow authenticated full access to documents" ON public.documents;
 CREATE POLICY "Allow authenticated full access to documents" ON public.documents FOR ALL TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow authenticated full access to document shares" ON public.document_shares;
 CREATE POLICY "Allow authenticated full access to document shares" ON public.document_shares FOR ALL TO authenticated USING (true);
 
 -- Notifications & Settings permissions
+DROP POLICY IF EXISTS "Allow users to read their own notifications" ON public.notifications;
 CREATE POLICY "Allow users to read their own notifications" ON public.notifications FOR SELECT TO authenticated USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "Allow users to update their own notifications" ON public.notifications;
 CREATE POLICY "Allow users to update their own notifications" ON public.notifications FOR UPDATE TO authenticated USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "Allow authenticated full access to settings" ON public.settings;
 CREATE POLICY "Allow authenticated full access to settings" ON public.settings FOR ALL TO authenticated USING (true);
 
 -- ==============================================================================
@@ -260,13 +279,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS handle_profiles_updated_at ON public.profiles;
 CREATE TRIGGER handle_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+DROP TRIGGER IF EXISTS handle_projects_updated_at ON public.projects;
 CREATE TRIGGER handle_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+DROP TRIGGER IF EXISTS handle_tasks_updated_at ON public.tasks;
 CREATE TRIGGER handle_tasks_updated_at BEFORE UPDATE ON public.tasks FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+DROP TRIGGER IF EXISTS handle_subtasks_updated_at ON public.subtasks;
 CREATE TRIGGER handle_subtasks_updated_at BEFORE UPDATE ON public.subtasks FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+DROP TRIGGER IF EXISTS handle_chat_channels_updated_at ON public.chat_channels;
 CREATE TRIGGER handle_chat_channels_updated_at BEFORE UPDATE ON public.chat_channels FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+DROP TRIGGER IF EXISTS handle_chat_messages_updated_at ON public.chat_messages;
 CREATE TRIGGER handle_chat_messages_updated_at BEFORE UPDATE ON public.chat_messages FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+DROP TRIGGER IF EXISTS handle_calendar_events_updated_at ON public.calendar_events;
 CREATE TRIGGER handle_calendar_events_updated_at BEFORE UPDATE ON public.calendar_events FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+DROP TRIGGER IF EXISTS handle_documents_updated_at ON public.documents;
 CREATE TRIGGER handle_documents_updated_at BEFORE UPDATE ON public.documents FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
 
 -- Trigger to create a profile automatically when a new user signs up via Supabase Auth
@@ -285,6 +312,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON public.auth;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();

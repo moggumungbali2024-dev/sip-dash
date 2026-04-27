@@ -183,12 +183,13 @@ export default function TaskTable({
               return (
                 <tr
                   key={task.id}
-                  className={`border-b border-border dark:border-gray-700 last:border-0 group transition-all duration-150 ${
+                  onClick={() => onEdit(task)}
+                  className={`border-b border-border dark:border-gray-700 last:border-0 group transition-all duration-150 cursor-pointer ${
                     isDeleting ? 'opacity-0 max-h-0' : 'opacity-100'
                   } ${isSelected ? 'bg-primary/5 dark:bg-primary/10' : idx % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-muted/20 dark:bg-gray-800/30'} hover:bg-primary/5 dark:hover:bg-primary/10`}
                 >
                   {/* Checkbox */}
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => toggleOne(task.id)}
                       className="text-muted-foreground hover:text-primary transition-colors"
@@ -224,7 +225,7 @@ export default function TaskTable({
                   </td>
 
                   {/* Status — inline dropdown */}
-                  <td className="px-3 py-3 relative">
+                  <td className="px-3 py-3 relative" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setStatusDropdownId(statusDropdownId === task.id ? null : task.id)}
                       className="group/status"
@@ -307,7 +308,7 @@ export default function TaskTable({
                   </td>
 
                   {/* WA Reminder */}
-                  <td className="px-3 py-3 hidden lg:table-cell">
+                  <td className="px-3 py-3 hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       size="sm"
                       checked={task.waReminder}
@@ -316,7 +317,7 @@ export default function TaskTable({
                   </td>
 
                   {/* Actions */}
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                       <div className="relative group/btn">
                         <button

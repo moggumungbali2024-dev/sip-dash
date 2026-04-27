@@ -37,6 +37,8 @@ export default function ChatSidebar({ channels, activeId, onSelect, onClose }: P
   const [channelsOpen, setChannelsOpen] = useState(true);
   const [dmsOpen, setDmsOpen] = useState(true);
   const [search, setSearch] = useState('');
+  const [showNewChannel, setShowNewChannel] = useState(false);
+  const [showNewMessage, setShowNewMessage] = useState(false);
 
   const groupChannels = channels.filter((c) => c.type === 'channel');
   const dmChannels = channels.filter((c) => c.type === 'dm');
@@ -124,7 +126,7 @@ export default function ChatSidebar({ channels, activeId, onSelect, onClose }: P
                 </button>
               ))}
               <button
-                onClick={() => toast.info('Add channel feature coming soon')}
+                onClick={() => setShowNewChannel(true)}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors duration-150"
               >
                 <Plus size={12} />
@@ -188,7 +190,7 @@ export default function ChatSidebar({ channels, activeId, onSelect, onClose }: P
                 );
               })}
               <button
-                onClick={() => toast.info('New message feature coming soon')}
+                onClick={() => setShowNewMessage(true)}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors duration-150"
               >
                 <Plus size={12} />
@@ -198,6 +200,55 @@ export default function ChatSidebar({ channels, activeId, onSelect, onClose }: P
           )}
         </div>
       </div>
+
+      {/* New Channel Modal */}
+      {showNewChannel && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-sm border border-border dark:border-gray-700 overflow-hidden animate-slide-up">
+            <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-[14px] font-bold text-foreground dark:text-white">Create New Channel</h3>
+              <button onClick={() => setShowNewChannel(false)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Channel Name</label>
+                <div className="flex items-center bg-background dark:bg-gray-800 border border-border dark:border-gray-700 rounded-lg px-3 overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                  <span className="text-muted-foreground mr-1">#</span>
+                  <input type="text" placeholder="e.g. design-team" className="w-full py-2 text-[13px] bg-transparent text-foreground dark:text-white outline-none" autoFocus />
+                </div>
+              </div>
+              <button onClick={() => { toast.success('Channel created (mock)'); setShowNewChannel(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
+                Create Channel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Message Modal */}
+      {showNewMessage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-sm border border-border dark:border-gray-700 overflow-hidden animate-slide-up">
+            <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-[14px] font-bold text-foreground dark:text-white">New Direct Message</h3>
+              <button onClick={() => setShowNewMessage(false)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Search User</label>
+                <input type="text" placeholder="Type a name or email..." className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" autoFocus />
+              </div>
+              <button onClick={() => { toast.success('Starting conversation (mock)'); setShowNewMessage(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
+                Start Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

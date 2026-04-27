@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
-import { User, Bell, Plug, Palette, Shield, ChevronRight, Check, Sun, Moon, AlertTriangle } from 'lucide-react';
+import { User, Bell, Plug, Palette, Shield, ChevronRight, Check, Sun, Moon, AlertTriangle, X } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 
@@ -85,6 +85,8 @@ function NotificationsTab() {
 }
 
 function IntegrationsTab() {
+  const [selectedInt, setSelectedInt] = useState<any>(null);
+
   const integrations = [
     { id: 'supabase', name: 'Supabase', desc: 'Database & Real-time Sync', status: 'connected', icon: '⚡' },
     { id: 'gowa', name: 'GoWa API', desc: 'WhatsApp Notifications', status: 'connected', icon: '💬' },
@@ -94,7 +96,7 @@ function IntegrationsTab() {
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card overflow-hidden relative">
       <div className="px-5 py-3.5 border-b border-border dark:border-gray-700 flex justify-between items-center">
         <div>
           <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">Integrasi Layanan</h3>
@@ -118,16 +120,62 @@ function IntegrationsTab() {
                 <p className="text-[11.5px] text-muted-foreground">{int.desc}</p>
               </div>
             </div>
-            <button className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
-              int.status === 'connected' 
-                ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800/30' 
-                : 'bg-primary text-white hover:bg-primary/90 shadow-sm'
-            }`}>
-              {int.status === 'connected' ? 'Putuskan' : 'Hubungkan'}
+            <button 
+              onClick={() => setSelectedInt(int)}
+              className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
+                int.status === 'connected' 
+                  ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800/30' 
+                  : 'bg-primary text-white hover:bg-primary/90 shadow-sm'
+              }`}>
+              {int.status === 'connected' ? 'Pengaturan' : 'Hubungkan'}
             </button>
           </div>
         ))}
       </div>
+
+      {/* Integration Modal Pop-up */}
+      {selectedInt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md border border-border dark:border-gray-700 overflow-hidden animate-slide-up">
+            <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{selectedInt.icon}</span>
+                <h3 className="text-[15px] font-bold text-foreground dark:text-white">{selectedInt.name} Integration</h3>
+              </div>
+              <button onClick={() => setSelectedInt(null)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {selectedInt.status === 'connected' ? (
+                <>
+                  <div className="p-3 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 rounded-lg text-[13px] flex items-center gap-2 border border-green-200 dark:border-green-900/30">
+                    <Check size={16} /> <b>Connected successfully.</b> The service is fully integrated.
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">API Key / Token</label>
+                    <input type="password" value="••••••••••••••••" readOnly className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-muted/50 dark:bg-gray-800 text-muted-foreground outline-none" />
+                  </div>
+                  <button onClick={() => { alert('Mencabut integrasi akan mematikan fitur ini.'); setSelectedInt(null); }} className="w-full py-2.5 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-lg text-[13px] font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors border border-red-200 dark:border-red-900/30 mt-2">
+                    Putuskan Integrasi
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-[13px] text-muted-foreground mb-4">Masukkan API Key dan Secret yang diperlukan untuk menghubungkan aplikasi Anda dengan {selectedInt.name}.</p>
+                  <div>
+                    <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">API Key</label>
+                    <input type="text" placeholder="Enter your API Key" className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                  </div>
+                  <button onClick={() => { alert('Integrasi berhasil!'); setSelectedInt(null); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors mt-2">
+                    Connect {selectedInt.name}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

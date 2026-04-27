@@ -5,6 +5,7 @@ import { Bell, Search, MessageSquare, Zap, Sun, Moon, Menu, Globe, CheckSquare, 
 import { useApp } from '@/lib/AppContext';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface TopbarProps {
   title: string;
@@ -78,6 +79,7 @@ export default function Topbar({ title, subtitle, onMobileMenuToggle }: TopbarPr
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState(recentNotifications);
   const { t, theme, toggleTheme, language, setLanguage } = useApp();
+  const router = useRouter();
 
   const notifRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
@@ -243,6 +245,10 @@ export default function Topbar({ title, subtitle, onMobileMenuToggle }: TopbarPr
                       setNotifications((prev) =>
                         prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
                       );
+                      setNotifOpen(false);
+                      if (notif.type === 'task') router.push('/task-management');
+                      else if (notif.type === 'chat' || notif.type === 'mention') router.push('/real-time-chat');
+                      else router.push('/settings');
                     }}
                   >
                     {/* Avatar */}

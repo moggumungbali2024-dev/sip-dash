@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { useApp } from '@/lib/AppContext';
-import { Shield, Plus, Check, ChevronDown, Users, Lock, Eye, EyeOff } from 'lucide-react';
+import { Shield, Plus, Check, ChevronDown, Users, Lock, Eye, EyeOff, Edit2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Role {
@@ -92,6 +92,10 @@ export default function AccessControlPage() {
     Object.fromEntries(members.map((m) => [m.id, m.role]))
   );
   const [openRoleDropdown, setOpenRoleDropdown] = useState<string | null>(null);
+  
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   return (
     <AppLayout title={t.accessControl.title} subtitle={t.accessControl.subtitle}>
@@ -123,7 +127,7 @@ export default function AccessControlPage() {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">{t.accessControl.roles}</h3>
                 <button 
-                  onClick={() => toast.info('Fitur penambahan role khusus akan segera tersedia.')}
+                  onClick={() => { setIsEditMode(false); setShowRoleModal(true); }}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-medium hover:bg-primary/90 transition-colors duration-150"
                 >
                   <Plus size={13} />
@@ -159,9 +163,14 @@ export default function AccessControlPage() {
                     <h3 className="text-[14px] font-semibold text-foreground dark:text-white">{selectedRole.name}</h3>
                     <p className="text-[12px] text-muted-foreground mt-0.5">{selectedRole.description}</p>
                   </div>
-                  <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${selectedRole.color}`}>
-                    {selectedRole.memberCount} {t.accessControl.members}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${selectedRole.color}`}>
+                      {selectedRole.memberCount} {t.accessControl.members}
+                    </span>
+                    <button onClick={() => { setIsEditMode(true); setShowRoleModal(true); }} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted dark:hover:bg-gray-800 text-muted-foreground transition-colors">
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
                 </div>
                 <div className="divide-y divide-border dark:divide-gray-700">
                   {modules.map((mod) => {
@@ -186,7 +195,7 @@ export default function AccessControlPage() {
             <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-[13.5px] font-semibold text-foreground dark:text-white">{t.accessControl.members}</h3>
               <button 
-                onClick={() => toast.info('Fitur assign role anggota baru akan segera tersedia.')}
+                onClick={() => setShowAssignModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-medium hover:bg-primary/90 transition-colors duration-150"
               >
                 <Plus size={13} />
@@ -237,6 +246,78 @@ export default function AccessControlPage() {
           </div>
         )}
       </div>
+
+      {showRoleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md border border-border dark:border-gray-700 overflow-hidden animate-slide-up">
+            <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-[14px] font-bold text-foreground dark:text-white">{isEditMode ? 'Edit Role' : 'Tambah Role Baru'}</h3>
+              <button onClick={() => setShowRoleModal(false)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin">
+              <div>
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Nama Role</label>
+                <input type="text" defaultValue={isEditMode ? selectedRole.name : ''} placeholder="contoh: Marketing" className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Deskripsi</label>
+                <input type="text" defaultValue={isEditMode ? selectedRole.description : ''} placeholder="Deskripsi singkat role" className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" />
+              </div>
+              <div className="pt-2">
+                <label className="block text-[12px] font-medium text-muted-foreground mb-3">Hak Akses Modul</label>
+                <div className="space-y-3">
+                  {modules.slice(0, 5).map(mod => (
+                    <div key={mod.key} className="flex items-center justify-between">
+                      <span className="text-[13px] text-foreground dark:text-white">{mod.label}</span>
+                      <select defaultValue={isEditMode ? selectedRole.permissions[mod.key] : 'read'} className="text-[12px] px-2 py-1 border border-border dark:border-gray-700 rounded bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none">
+                        <option value="full">Full Access</option>
+                        <option value="read">Read Only</option>
+                        <option value="none">No Access</option>
+                      </select>
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-muted-foreground pt-2 text-center">Menampilkan 5 dari {modules.length} modul</p>
+                </div>
+              </div>
+              <button onClick={() => { toast.success(isEditMode ? 'Role diupdate' : 'Role dibuat'); setShowRoleModal(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors mt-2">
+                Simpan Role
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAssignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-sm border border-border dark:border-gray-700 overflow-hidden animate-slide-up">
+            <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-[14px] font-bold text-foreground dark:text-white">Assign Role</h3>
+              <button onClick={() => setShowAssignModal(false)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Pilih Anggota</label>
+                <select className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                  {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Pilih Role</label>
+                <select className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                  {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+              <button onClick={() => { toast.success('Role berhasil diubah'); setShowAssignModal(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
+                Terapkan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

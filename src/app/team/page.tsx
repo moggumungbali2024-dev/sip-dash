@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
-import { Search, UserPlus, MoreHorizontal, Mail, Phone, Shield, CheckSquare } from 'lucide-react';
+import { Search, UserPlus, MoreHorizontal, Mail, Phone, Shield, CheckSquare, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TeamMember {
@@ -50,6 +50,7 @@ const roleColors: Record<string, string> = {
 export default function TeamPage() {
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
+  const [showAddMember, setShowAddMember] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const departments = ['all', ...Array.from(new Set(members.map((m) => m.department)))];
@@ -105,7 +106,7 @@ export default function TeamPage() {
             ))}
           </div>
           <button 
-            onClick={() => toast.info('Fitur undang anggota akan segera diintegrasikan dengan Supabase.')}
+            onClick={() => setShowAddMember(true)}
             className="md:ml-auto w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors duration-150"
           >
             <UserPlus size={15} />
@@ -187,6 +188,36 @@ export default function TeamPage() {
           })}
         </div>
       </div>
+
+      {showAddMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-sm border border-border dark:border-gray-700 overflow-hidden animate-slide-up">
+            <div className="px-5 py-4 border-b border-border dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-[14px] font-bold text-foreground dark:text-white">Undang Anggota</h3>
+              <button onClick={() => setShowAddMember(false)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Email Anggota</label>
+                <input type="email" placeholder="contoh@perusahaan.com" className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" autoFocus />
+              </div>
+              <div>
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">Role</label>
+                <select className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                  <option>Employee</option>
+                  <option>Manager</option>
+                  <option>Supervisor</option>
+                </select>
+              </div>
+              <button onClick={() => { toast.success('Undangan berhasil dikirim (mock)'); setShowAddMember(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors">
+                Kirim Undangan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
