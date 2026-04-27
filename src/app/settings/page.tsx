@@ -29,14 +29,21 @@ function ProfileTab() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { label: 'Nama Lengkap', value: 'Andi Susanto', type: 'text' },
-            { label: 'Email', value: 'andi.susanto@teamflow.id', type: 'email' },
-            { label: 'Jabatan', value: 'Manager', type: 'text' },
-            { label: 'Nomor WhatsApp', value: '+62 812-3456-7890', type: 'tel' },
+            { label: 'Nama Lengkap', value: 'Andi Susanto', type: 'text', readOnly: false },
+            { label: 'Email', value: 'andi.susanto@teamflow.id', type: 'email', readOnly: false },
+            { label: 'Role', value: 'Manager', type: 'text', readOnly: true },
+            { label: 'Nomor WhatsApp', value: '+62 812-3456-7890', type: 'tel', readOnly: false },
           ].map((field) => (
             <div key={field.label}>
               <label className="block text-[12px] font-medium text-muted-foreground mb-1.5">{field.label}</label>
-              <input type={field.type} defaultValue={field.value} className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-150" />
+              {field.readOnly ? (
+                <div>
+                  <input type={field.type} defaultValue={field.value} readOnly className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-muted/50 dark:bg-gray-800/50 text-muted-foreground outline-none cursor-not-allowed" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Role hanya dapat diubah oleh Admin di halaman <a href="/team" className="text-primary hover:underline">Team</a>.</p>
+                </div>
+              ) : (
+                <input type={field.type} defaultValue={field.value} className="w-full px-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-background dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-150" />
+              )}
             </div>
           ))}
         </div>

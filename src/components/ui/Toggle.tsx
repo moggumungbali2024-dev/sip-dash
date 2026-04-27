@@ -11,31 +11,57 @@ interface ToggleProps {
 }
 
 export default function Toggle({ checked, onChange, label, disabled, size = 'md' }: ToggleProps) {
-  const trackW = size === 'sm' ? 'w-8' : 'w-11';
-  const trackH = size === 'sm' ? 'h-4' : 'h-6';
-  const thumbW = size === 'sm' ? 'w-3' : 'w-4';
-  const thumbH = size === 'sm' ? 'h-3' : 'h-4';
-  const thumbTranslate = size === 'sm' ? 'translate-x-4' : 'translate-x-5';
+  const isSmall = size === 'sm';
+  // Track & thumb dimensions using inline styles to avoid Tailwind purging issues
+  const trackStyle: React.CSSProperties = {
+    width: isSmall ? 32 : 44,
+    height: isSmall ? 18 : 24,
+    borderRadius: 999,
+    backgroundColor: checked ? '#2563eb' : '#d1d5db',
+    position: 'relative',
+    display: 'inline-block',
+    flexShrink: 0,
+    transition: 'background-color 0.2s',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
+    border: 'none',
+    outline: 'none',
+    verticalAlign: 'middle',
+  };
+
+  const thumbSize = isSmall ? 12 : 16;
+  const thumbOffset = 3;
+  const thumbTranslate = checked ? (isSmall ? 32 - thumbSize - thumbOffset : 44 - thumbSize - thumbOffset) : thumbOffset;
+
+  const thumbStyle: React.CSSProperties = {
+    width: thumbSize,
+    height: thumbSize,
+    borderRadius: '50%',
+    backgroundColor: '#ffffff',
+    position: 'absolute',
+    top: thumbOffset,
+    left: thumbTranslate,
+    transition: 'left 0.2s',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+  };
 
   return (
-    <label className={`flex items-center gap-2 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+    <label
+      style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: disabled ? 'not-allowed' : 'pointer' }}
+    >
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
-        className={`relative inline-flex shrink-0 ${trackW} ${trackH} rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-          checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
-        }`}
+        style={trackStyle}
       >
-        <span
-          className={`absolute top-1 left-1 ${thumbW} ${thumbH} bg-white rounded-full shadow-sm transition-transform duration-200 ${
-            checked ? thumbTranslate : 'translate-x-0'
-          }`}
-        />
+        <span style={thumbStyle} />
       </button>
-      {label && <span className="text-[12px] text-muted-foreground">{label}</span>}
+      {label && (
+        <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{label}</span>
+      )}
     </label>
   );
 }

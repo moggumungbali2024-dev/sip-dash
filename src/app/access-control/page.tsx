@@ -268,7 +268,7 @@ export default function AccessControlPage() {
               <div className="pt-2">
                 <label className="block text-[12px] font-medium text-muted-foreground mb-3">Hak Akses Modul</label>
                 <div className="space-y-3">
-                  {modules.slice(0, 5).map(mod => (
+                  {modules.map(mod => (
                     <div key={mod.key} className="flex items-center justify-between">
                       <span className="text-[13px] text-foreground dark:text-white">{mod.label}</span>
                       <select defaultValue={isEditMode ? selectedRole.permissions[mod.key] : 'read'} className="text-[12px] px-2 py-1 border border-border dark:border-gray-700 rounded bg-background dark:bg-gray-800 text-foreground dark:text-white outline-none">
@@ -278,7 +278,6 @@ export default function AccessControlPage() {
                       </select>
                     </div>
                   ))}
-                  <p className="text-[11px] text-muted-foreground pt-2 text-center">Menampilkan 5 dari {modules.length} modul</p>
                 </div>
               </div>
               <button onClick={() => { toast.success(isEditMode ? 'Role diupdate' : 'Role dibuat'); setShowRoleModal(false); }} className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors mt-2">

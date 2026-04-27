@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ChatSidebar from './ChatSidebar';
 import ChatMessageArea from './ChatMessageArea';
 import ChatInfoPanel from './ChatInfoPanel';
-import { mockChannels } from './chatMockData';
+import { mockChannels, mockMembers } from './chatMockData';
 import { ChatChannel, ChatMessage } from './chatTypes';
 import { useChatChannels, useChatMessages, useProfiles } from '@/lib/useSupabase';
 
@@ -164,7 +164,7 @@ export default function ChatContent() {
           onSelect={handleSelectChannel}
           onClose={() => setMobileSidebarOpen(false)}
           onCreateChannel={handleCreateChannel}
-          members={profiles}
+          members={profiles.length > 0 ? profiles as any : mockMembers}
         />
       </div>
 

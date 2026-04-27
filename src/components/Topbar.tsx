@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Search, MessageSquare, Zap, Sun, Moon, Menu, Globe, CheckSquare, Users, Settings, CheckCheck, X } from 'lucide-react';
+import { Bell, Search, MessageSquare, Zap, Sun, Moon, Menu, Globe, CheckSquare, Users, Settings, CheckCheck, X, User, LogOut } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import Link from 'next/link';
@@ -77,12 +77,14 @@ export default function Topbar({ title, subtitle, onMobileMenuToggle }: TopbarPr
   const [searchFocused, setSearchFocused] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState(recentNotifications);
   const { t, theme, toggleTheme, language, setLanguage } = useApp();
   const router = useRouter();
 
   const notifRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -93,6 +95,9 @@ export default function Topbar({ title, subtitle, onMobileMenuToggle }: TopbarPr
       }
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
         setLangOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -298,8 +303,45 @@ export default function Topbar({ title, subtitle, onMobileMenuToggle }: TopbarPr
         >
           <Zap size={18} />
         </button>
-        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center ml-1 cursor-pointer hover:bg-primary/30 transition-colors duration-150">
-          <span className="text-primary text-xs font-semibold">AS</span>
+
+        {/* User Profile */}
+        <div className="relative ml-1" ref={profileRef}>
+          <div
+            onClick={() => setProfileOpen(!profileOpen)}
+            className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center cursor-pointer hover:bg-primary/30 transition-colors duration-150 ring-2 ring-transparent focus-within:ring-primary/50"
+          >
+            <span className="text-primary text-[11px] font-bold">AS</span>
+          </div>
+
+          {profileOpen && (
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-border dark:border-gray-700 rounded-xl shadow-dropdown z-50 overflow-hidden animate-fade-in">
+              <div className="px-4 py-3 border-b border-border dark:border-gray-700 bg-muted/30 dark:bg-gray-900/50">
+                <p className="text-[13px] font-semibold text-foreground dark:text-white">Andi Susanto</p>
+                <p className="text-[11px] text-muted-foreground">Manager</p>
+              </div>
+              <div className="p-1.5">
+                <button
+                  onClick={() => { setProfileOpen(false); router.push('/settings'); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-medium text-foreground dark:text-white hover:bg-muted dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <User size={14} className="text-muted-foreground" />
+                  Edit Profile
+                </button>
+                <div className="my-1 border-t border-border dark:border-gray-700" />
+                <button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    // Add logout logic here later
+                    console.log('logout');
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-medium text-destructive hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                >
+                  <LogOut size={14} />
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

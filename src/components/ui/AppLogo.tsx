@@ -1,49 +1,35 @@
 'use client';
 
-import React, { memo, useMemo } from 'react';
-import AppIcon from './AppIcon';
-import AppImage from './AppImage';
+import React, { memo } from 'react';
 
 interface AppLogoProps {
-  src?: string; // Image source (optional)
-  iconName?: string; // Icon name when no image
-  size?: number; // Size for icon/image
-  className?: string; // Additional classes
-  onClick?: () => void; // Click handler
+  src?: string;
+  size?: number;
+  className?: string;
+  onClick?: () => void;
 }
 
+// Use a plain <img> tag to avoid any Next.js Image optimization issues with the logo
 const AppLogo = memo(function AppLogo({
   src = '/assets/images/app_logo.png',
-  iconName = 'SparklesIcon',
-  size = 64,
+  size = 32,
   className = '',
   onClick,
 }: AppLogoProps) {
-  // Memoize className calculation
-  const containerClassName = useMemo(() => {
-    const classes = ['flex items-center'];
-    if (onClick) classes.push('cursor-pointer hover:opacity-80 transition-opacity');
-    if (className) classes.push(className);
-    return classes.join(' ');
-  }, [onClick, className]);
-
   return (
-    <div className={containerClassName} onClick={onClick}>
-      {/* Show image if src provided, otherwise show icon */}
-      {src ? (
-        <AppImage
-          src={src}
-          alt="Logo" 
-          width={size}
-          height={size}
-          className="flex-shrink-0"
-          priority={true}
-          unoptimized={src.endsWith('.svg') || src.endsWith('.ico')}
-        />
-      ) : (
-        <AppIcon name={iconName} size={size} className="flex-shrink-0" />
-      )}
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt="sipOS Logo"
+      width={size}
+      height={size}
+      className={`flex-shrink-0 object-contain ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''} ${className}`}
+      onClick={onClick}
+      onError={(e) => {
+        // Hide broken image — icon fallback will show from parent
+        (e.target as HTMLImageElement).style.display = 'none';
+      }}
+    />
   );
 });
 
