@@ -39,7 +39,7 @@ const navItems: NavItem[] = [
   { id: 'nav-documents', labelKey: 'documents', href: '/documents', icon: <FolderOpen size={18} />, group: 'main' },
   { id: 'nav-team', labelKey: 'teamMembers', href: '/team', icon: <Users size={18} />, group: 'manage' },
   { id: 'nav-access', labelKey: 'accessControl', href: '/access-control', icon: <Shield size={18} />, group: 'manage' },
-  { id: 'nav-notifications', labelKey: 'notifications', href: '/notifications', icon: <Bell size={18} />, badge: 3, group: 'manage' },
+  { id: 'nav-notifications', labelKey: 'notifications', href: '/notifications', icon: <Bell size={18} />, group: 'manage' },
 ];
 
 interface SidebarProps {
@@ -51,7 +51,7 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
-  const { t } = useApp();
+  const { t, notificationCount } = useApp();
 
   const groups: { key: 'main' | 'manage'; label: string }[] = [
     { key: 'main', label: t.nav.workspace },
@@ -94,6 +94,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
               .map((item) => {
                 const isActive = pathname === item.href;
                 const label = t.nav[item.labelKey];
+                const badgeCount = item.id === 'nav-notifications' ? notificationCount : item.badge;
                 return (
                   <div key={item.id} className="relative group/nav">
                     <Link
@@ -110,21 +111,21 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                       {!collapsed && (
                         <span className="text-[13.5px] truncate flex-1">{label}</span>
                       )}
-                      {!collapsed && item.badge !== undefined && item.badge > 0 && (
+                      {!collapsed && badgeCount !== undefined && badgeCount > 0 && (
                         <span className="ml-auto bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full tabular-nums">
-                          {item.badge}
+                          {badgeCount}
                         </span>
                       )}
-                      {collapsed && item.badge !== undefined && item.badge > 0 && (
+                      {collapsed && badgeCount !== undefined && badgeCount > 0 && (
                         <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
                       )}
                     </Link>
                     {collapsed && (
                       <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-foreground dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover/nav:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-dropdown">
                         {label}
-                        {item.badge !== undefined && item.badge > 0 && (
+                        {badgeCount !== undefined && badgeCount > 0 && (
                           <span className="ml-1.5 bg-primary text-white text-[10px] px-1 rounded-full">
-                            {item.badge}
+                            {badgeCount}
                           </span>
                         )}
                       </div>

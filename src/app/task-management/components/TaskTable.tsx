@@ -148,12 +148,12 @@ export default function TaskTable({
                 </button>
               </th>
               {[
-                { key: 'title' as SortKey, label: 'Task', width: 'w-64' },
-                { key: 'project' as SortKey, label: 'Project', width: 'w-32' },
-                { key: 'assignee' as SortKey, label: 'Assignee', width: 'w-36' },
-                { key: 'priority' as SortKey, label: 'Priority', width: 'w-24' },
+                { key: 'title' as SortKey, label: 'Task', width: 'w-64 md:w-auto' },
                 { key: 'status' as SortKey, label: 'Status', width: 'w-32' },
-                { key: 'dueDate' as SortKey, label: 'Due Date', width: 'w-28' },
+                { key: 'project' as SortKey, label: 'Project', width: 'w-32 hidden md:table-cell' },
+                { key: 'assignee' as SortKey, label: 'Assignee', width: 'w-36 hidden md:table-cell' },
+                { key: 'priority' as SortKey, label: 'Priority', width: 'w-24 hidden lg:table-cell' },
+                { key: 'dueDate' as SortKey, label: 'Due Date', width: 'w-28 hidden md:table-cell' },
               ].map((col) => (
                 <th
                   key={`th-${col.key}`}
@@ -164,10 +164,10 @@ export default function TaskTable({
                   <SortIcon col={col.key} />
                 </th>
               ))}
-              <th className="w-20 px-3 py-3 text-left text-[11px] font-600 uppercase tracking-wider text-muted-foreground">
+              <th className="w-20 px-3 py-3 text-left text-[11px] font-600 uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
                 Subtasks
               </th>
-              <th className="w-20 px-3 py-3 text-left text-[11px] font-600 uppercase tracking-wider text-muted-foreground">
+              <th className="w-20 px-3 py-3 text-left text-[11px] font-600 uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
                 WA Remind
               </th>
               <th className="w-24 px-3 py-3 text-right text-[11px] font-600 uppercase tracking-wider text-muted-foreground">
@@ -223,32 +223,6 @@ export default function TaskTable({
                     </div>
                   </td>
 
-                  {/* Project */}
-                  <td className="px-3 py-3">
-                    <span className="text-[12px] text-muted-foreground dark:text-gray-400 bg-muted dark:bg-gray-800 px-2 py-0.5 rounded-md truncate max-w-[110px] block">
-                      {task.project}
-                    </span>
-                  </td>
-
-                  {/* Assignee */}
-                  <td className="px-3 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 ${avatarColors[task.assignee.avatar] || 'bg-slate-100 text-slate-600'}`}>
-                        {task.assignee.avatar}
-                      </div>
-                      <span className="text-[12.5px] text-foreground dark:text-white truncate max-w-[80px]">
-                        {task.assignee.name.split(' ')[0]}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Priority */}
-                  <td className="px-3 py-3">
-                    <Badge variant={task.priority} dot>
-                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                    </Badge>
-                  </td>
-
                   {/* Status — inline dropdown */}
                   <td className="px-3 py-3 relative">
                     <button
@@ -278,15 +252,43 @@ export default function TaskTable({
                     )}
                   </td>
 
+                  {/* Project */}
+                  <td className="px-3 py-3 hidden md:table-cell">
+                    <span className="text-[12px] text-muted-foreground dark:text-gray-400 bg-muted dark:bg-gray-800 px-2 py-0.5 rounded-md truncate max-w-[110px] block">
+                      {task.project}
+                    </span>
+                  </td>
+
+                  {/* Assignee */}
+                  <td className="px-3 py-3 hidden md:table-cell">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 ${avatarColors[task.assignee.avatar] || 'bg-slate-100 text-slate-600'}`}>
+                        {task.assignee.avatar}
+                      </div>
+                      <span className="text-[12.5px] text-foreground dark:text-white truncate max-w-[80px]">
+                        {task.assignee.name.split(' ')[0]}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Priority */}
+                  <td className="px-3 py-3 hidden lg:table-cell">
+                    <Badge variant={task.priority} dot>
+                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                    </Badge>
+                  </td>
+
+
+
                   {/* Due Date */}
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-3 hidden md:table-cell">
                     <span className={`text-[12.5px] tabular-nums font-medium ${due.overdue ? 'text-destructive' : due.today ? 'text-amber-600' : 'text-muted-foreground'}`}>
                       {due.label}
                     </span>
                   </td>
 
                   {/* Subtasks */}
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-3 hidden lg:table-cell">
                     {task.subtaskCount > 0 ? (
                       <div className="flex items-center gap-1.5">
                         <div className="w-16 h-1.5 bg-border rounded-full overflow-hidden">
@@ -305,7 +307,7 @@ export default function TaskTable({
                   </td>
 
                   {/* WA Reminder */}
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-3 hidden lg:table-cell">
                     <Toggle
                       size="sm"
                       checked={task.waReminder}

@@ -228,7 +228,7 @@ export default function AccessControlPage() {
               ))}
             </div>
           </div>
-        ))}
+        )}
       </div>
     </AppLayout>
   );

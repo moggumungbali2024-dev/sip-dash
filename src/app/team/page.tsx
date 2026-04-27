@@ -81,8 +81,8 @@ export default function TeamPage() {
         </div>
 
         {/* Filters + invite */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="relative w-full md:flex-1 md:max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
@@ -92,18 +92,18 @@ export default function TeamPage() {
               className="w-full pl-8 pr-3 py-2 text-[13px] border border-border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-150"
             />
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto scrollbar-hide snap-x">
             {departments.map((dept) => (
               <button
                 key={dept}
                 onClick={() => setDeptFilter(dept)}
-                className={`px-3 py-1.5 text-[12px] font-medium rounded-lg border transition-all duration-150 ${deptFilter === dept ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-gray-900 text-muted-foreground dark:text-gray-400 border-border dark:border-gray-700 hover:bg-muted dark:hover:bg-gray-800 hover:text-foreground dark:hover:text-white'}`}
+                className={`shrink-0 snap-start px-3 py-1.5 text-[12px] font-medium rounded-lg border transition-all duration-150 ${deptFilter === dept ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-gray-900 text-muted-foreground dark:text-gray-400 border-border dark:border-gray-700 hover:bg-muted dark:hover:bg-gray-800 hover:text-foreground dark:hover:text-white'}`}
               >
                 {dept === 'all' ? 'Semua' : dept}
               </button>
             ))}
           </div>
-          <button className="ml-auto flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors duration-150">
+          <button className="md:ml-auto w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors duration-150">
             <UserPlus size={15} />
             Undang Anggota
           </button>

@@ -8,7 +8,6 @@ import {
   Paperclip,
   Smile,
   Send,
-  Check,
   CheckCheck,
   FileText,
   Image as ImageIcon,
@@ -16,7 +15,9 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { ChatChannel, ChatMessage } from './chatTypes';
+import { mockMembers } from '../task-management/components/taskMockData';
 import { toast } from 'sonner';
 
 interface Props {
@@ -60,6 +61,8 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
   const [input, setInput] = useState('');
   const [isTyping] = useState(false);
   const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
+  const [showMainEmojiPicker, setShowMainEmojiPicker] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -85,7 +88,8 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    const val = e.target.value;
+    setInput(val);
     
     // Auto-resize
     if (inputRef.current) {
@@ -93,10 +97,27 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
       inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
     }
 
-    // Mock mentions
-    const lastChar = e.target.value.slice(-1);
-    if (lastChar === '@') toast.info('Mention member (@) functionality coming soon');
-    if (lastChar === '#') toast.info('Tag channel (#) functionality coming soon');
+    // Mention detection
+    const lastWord = val.split(' ').pop();
+    if (lastWord && lastWord.startsWith('@')) {
+      setMentionQuery(lastWord.slice(1).toLowerCase());
+    } else {
+      setMentionQuery(null);
+    }
+  };
+
+  const insertMention = (name: string) => {
+    const words = input.split(' ');
+    words.pop();
+    const newText = [...words, `@${name} `].join(' ');
+    setInput(newText);
+    setMentionQuery(null);
+    inputRef.current?.focus();
+  };
+
+  const onEmojiClick = (emojiData: any) => {
+    setInput(prev => prev + emojiData.emoji);
+    setShowMainEmojiPicker(false);
   };
 
   if (!channel) return null;
@@ -349,8 +370,41 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className="px-3 md:px-5 py-3 md:py-4 border-t border-border dark:border-gray-700 shrink-0 bg-white dark:bg-gray-900">
+      <div className="px-3 md:px-5 py-3 md:py-4 border-t border-border dark:border-gray-700 shrink-0 bg-white dark:bg-gray-900 relative">
+        {/* Mentions Dropdown */}
+        {mentionQuery !== null && (
+          <div className="absolute bottom-full left-5 mb-2 w-64 bg-white dark:bg-gray-800 border border-border dark:border-gray-700 rounded-xl shadow-dropdown z-50 overflow-hidden animate-slide-up max-h-60 overflow-y-auto scrollbar-thin">
+            <div className="px-3 py-2 text-[11px] font-medium text-muted-foreground bg-muted/50 dark:bg-gray-800/50 border-b border-border dark:border-gray-700">
+              Mentions
+            </div>
+            {mockMembers.filter(m => m.name.toLowerCase().includes(mentionQuery) || m.role.toLowerCase().includes(mentionQuery)).map(m => (
+              <button
+                key={m.id}
+                onClick={() => insertMention(m.name)}
+                className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted dark:hover:bg-gray-700 transition-colors text-left"
+              >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarColors[m.avatar] || 'bg-slate-100 text-slate-600'}`}>
+                  {m.avatar}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-foreground dark:text-white truncate">{m.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{m.role}</p>
+                </div>
+              </button>
+            ))}
+            {mockMembers.filter(m => m.name.toLowerCase().includes(mentionQuery) || m.role.toLowerCase().includes(mentionQuery)).length === 0 && (
+              <div className="px-3 py-4 text-center text-[12px] text-muted-foreground">No members found</div>
+            )}
+          </div>
+        )}
+
+        {/* Main Emoji Picker */}
+        {showMainEmojiPicker && (
+          <div className="absolute bottom-full right-5 mb-2 z-50 shadow-dropdown rounded-lg overflow-hidden animate-fade-in">
+            <EmojiPicker onEmojiClick={onEmojiClick} theme={Theme.AUTO} searchDisabled skinTonesDisabled height={350} width={300} />
+          </div>
+        )}
+
         <div className="flex items-end gap-2 md:gap-3 bg-muted dark:bg-gray-800 rounded-xl px-3 md:px-4 py-2.5 md:py-3 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
           <textarea
             ref={inputRef}
@@ -370,8 +424,8 @@ export default function ChatMessageArea({ channel, messages, onSend, onReaction,
               <Paperclip size={15} />
             </button>
             <button
-              onClick={() => toast.info('Emoji picker coming soon')}
-              className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors duration-150"
+              onClick={() => setShowMainEmojiPicker(!showMainEmojiPicker)}
+              className={`w-7 h-7 flex items-center justify-center transition-colors duration-150 ${showMainEmojiPicker ? 'text-primary' : 'text-muted-foreground hover:text-foreground dark:hover:text-white'}`}
             >
               <Smile size={15} />
             </button>

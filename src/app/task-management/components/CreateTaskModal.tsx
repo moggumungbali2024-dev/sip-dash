@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Toggle from '@/components/ui/Toggle';
@@ -15,6 +15,7 @@ interface CreateTaskModalProps {
   initialData?: Task | null;
 }
 
+
 interface FormData {
   title: string;
   description: string;
@@ -25,6 +26,7 @@ interface FormData {
   tags: string;
 }
 
+export default function CreateTaskModal({ open, onClose, onCreate, initialData }: CreateTaskModalProps) {
   const [waReminder, setWaReminder] = useState(initialData?.waReminder ?? true);
   const [submitting, setSubmitting] = useState(false);
   // Ambil setting dari localStorage (client only)
@@ -39,10 +41,11 @@ interface FormData {
     }
   }, []);
 
-  const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    control,
     formState: { errors },
   } = useForm<FormData>();
 
@@ -65,7 +68,7 @@ interface FormData {
   }, [initialData, open, reset]);
 
   // Sync setting dari localStorage jika berubah
-  React.useEffect(() => {
+  useEffect(() => {
     const handleStorage = () => {
       setDefaultCriticalDue(Number(localStorage.getItem('defaultCriticalDue') || 24));
       setEnableAutoDue(localStorage.getItem('enableAutoDue') !== 'false');
@@ -74,15 +77,21 @@ interface FormData {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  const onSubmit = (data: FormData) => {
-    setSubmitting(true);
-    // Jika priority critical dan setting aktif, set due date otomatis jika kosong
-    let dueDate = data.dueDate;
-    if (enableAutoDue && data.priority === 'critical' && !dueDate) {
+  const selectedPriority = useWatch({ control, name: 'priority' });
+  const selectedDueDate = useWatch({ control, name: 'dueDate' });
+
+  // Auto-set Due Date when Priority changes to Critical
+  useEffect(() => {
+    if (enableAutoDue && selectedPriority === 'critical' && !selectedDueDate) {
       const now = new Date();
       now.setHours(now.getHours() + defaultCriticalDue);
-      dueDate = now.toISOString().split('T')[0];
+      setValue('dueDate', now.toISOString().split('T')[0], { shouldValidate: true });
     }
+  }, [selectedPriority, enableAutoDue, defaultCriticalDue, selectedDueDate, setValue]);
+
+  const onSubmit = (data: FormData) => {
+    setSubmitting(true);
+    let dueDate = data.dueDate;
     setTimeout(() => {
       const assignee = mockMembers.find((m) => m.id === data.assigneeId) || mockMembers[0];
       onCreate({
@@ -116,7 +125,7 @@ interface FormData {
             placeholder="e.g. Redesign login page for mobile"
             className="w-full px-3 py-2 text-[13.5px] border border-border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 placeholder:text-muted-foreground transition-all"
           />
-          {errors.title && <p className="text-[11.5px] text-destructive mt-1">{errors.title.message}</p>}
+          {errors?.title && <p className="text-[11.5px] text-destructive mt-1">{errors?.title?.message}</p>}
         </div>
 
         {/* Description */}
@@ -146,7 +155,7 @@ interface FormData {
               <option value="medium">🟡 Medium</option>
               <option value="low">⚪ Low</option>
             </select>
-            {errors.priority && <p className="text-[11.5px] text-destructive mt-1">{errors.priority.message}</p>}
+            {errors?.priority && <p className="text-[11.5px] text-destructive mt-1">{errors?.priority?.message}</p>}
           </div>
           <div>
             <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">
@@ -161,7 +170,7 @@ interface FormData {
                 <option key={`create-project-${p}`} value={p}>{p}</option>
               ))}
             </select>
-            {errors.project && <p className="text-[11.5px] text-destructive mt-1">{errors.project.message}</p>}
+            {errors?.project && <p className="text-[11.5px] text-destructive mt-1">{errors?.project?.message}</p>}
           </div>
         </div>
 
@@ -183,7 +192,7 @@ interface FormData {
                 </option>
               ))}
             </select>
-            {errors.assigneeId && <p className="text-[11.5px] text-destructive mt-1">{errors.assigneeId.message}</p>}
+            {errors?.assigneeId && <p className="text-[11.5px] text-destructive mt-1">{errors?.assigneeId?.message}</p>}
           </div>
           <div>
             <label className="block text-[13px] font-medium text-foreground dark:text-white mb-1">
@@ -194,7 +203,7 @@ interface FormData {
               type="date"
               className="w-full px-3 py-2 text-[13.5px] border border-border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
             />
-            {errors.dueDate && <p className="text-[11.5px] text-destructive mt-1">{errors.dueDate.message}</p>}
+            {errors?.dueDate && <p className="text-[11.5px] text-destructive mt-1">{errors?.dueDate?.message}</p>}
           </div>
         </div>
 

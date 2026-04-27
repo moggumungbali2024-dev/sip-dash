@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
-import { User, Bell, Plug, Palette, Shield, ChevronRight, Check, Sun, Moon } from 'lucide-react';
+import { User, Bell, Plug, Palette, Shield, ChevronRight, Check, Sun, Moon, AlertTriangle } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 
-type SettingsTab = 'profile' | 'notifications' | 'integrations' | 'appearance' | 'security';
+type SettingsTab = 'profile' | 'notifications' | 'integrations' | 'appearance' | 'security' | 'data';
 
 function ProfileTab() {
   const { t } = useApp();
@@ -192,6 +192,47 @@ function SecurityTab() {
   );
 }
 
+function DataTab() {
+  const [resetting, setResetting] = useState(false);
+
+  const handleReset = async () => {
+    if (!confirm('Peringatan: Tindakan ini akan MENGHAPUS SEMUA DATA di database. Lanjutkan?')) return;
+    setResetting(true);
+    try {
+      // Panggil endpoint /api/dev/reset-data (nanti kita buat) atau reset localStorage jika menggunakan mock
+      localStorage.clear();
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Gagal reset data.');
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-card overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-border dark:border-gray-700">
+          <h3 className="text-[13.5px] font-semibold text-destructive">Danger Zone (Data Management)</h3>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-[12.5px] text-muted-foreground">
+            Fitur ini digunakan untuk pengembangan dan testing. <b>Reset Data</b> akan menghapus seluruh data (Tasks, Chat, Activity, Notifications) dari database.
+          </p>
+          <button
+            onClick={handleReset}
+            disabled={resetting}
+            className="px-4 py-2 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg text-[13px] font-medium hover:bg-destructive hover:text-white transition-colors duration-150"
+          >
+            {resetting ? 'Resetting...' : 'Reset Semua Data'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const { t } = useApp();
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
@@ -225,6 +266,7 @@ export default function SettingsPage() {
     { id: 'task', label: 'Task', icon: <Check size={16} /> },
     { id: 'appearance', label: t.settings.appearance, icon: <Palette size={16} /> },
     { id: 'security', label: t.settings.security, icon: <Shield size={16} /> },
+    { id: 'data', label: 'Data', icon: <AlertTriangle size={16} /> },
   ];
 
   const tabContent: Record<string, React.ReactNode> = {
@@ -234,6 +276,7 @@ export default function SettingsPage() {
     task: <TaskSettingsTab defaultCriticalDue={defaultCriticalDue} setDefaultCriticalDue={setDefaultCriticalDue} enableAutoDue={enableAutoDue} setEnableAutoDue={setEnableAutoDue} />,
     appearance: <AppearanceTab />,
     security: <SecurityTab />,
+    data: <DataTab />,
   };
 
   return (

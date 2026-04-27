@@ -164,6 +164,30 @@ CREATE TABLE public.document_shares (
     PRIMARY KEY (document_id, user_id)
 );
 
+-- ==========================================
+-- 11. NOTIFICATIONS
+-- ==========================================
+CREATE TABLE public.notifications (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    type TEXT NOT NULL, -- mention, task_assigned, reminder
+    is_read BOOLEAN DEFAULT false,
+    link TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ==========================================
+-- 12. SETTINGS
+-- ==========================================
+CREATE TABLE public.settings (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    workspace_id TEXT DEFAULT 'default',
+    critical_task_deadline_hours INTEGER DEFAULT 24,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ==============================================================================
@@ -180,6 +204,8 @@ ALTER TABLE public.calendar_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.calendar_event_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.document_shares ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 
 -- Note: In a production app you'd want granular policies.
 -- For sipOS Team Dashboard, we will start with standard authenticated access policies:
@@ -215,6 +241,11 @@ CREATE POLICY "Allow authenticated full access to calendar members" ON public.ca
 -- Document permissions
 CREATE POLICY "Allow authenticated full access to documents" ON public.documents FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow authenticated full access to document shares" ON public.document_shares FOR ALL TO authenticated USING (true);
+
+-- Notifications & Settings permissions
+CREATE POLICY "Allow users to read their own notifications" ON public.notifications FOR SELECT TO authenticated USING (user_id = auth.uid());
+CREATE POLICY "Allow users to update their own notifications" ON public.notifications FOR UPDATE TO authenticated USING (user_id = auth.uid());
+CREATE POLICY "Allow authenticated full access to settings" ON public.settings FOR ALL TO authenticated USING (true);
 
 -- ==============================================================================
 -- FUNCTIONS & TRIGGERS
